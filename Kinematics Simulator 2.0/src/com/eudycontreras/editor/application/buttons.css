@@ -1,0 +1,80 @@
+#background {
+    -light-black: rgb(45.0, 45.0, 45.0);
+    -dark-highlight: rgb(90.0, 90.0, 92.0);
+    -dark-black: rgb(27.0, 27.0, 27.0);
+    -darkest-black: rgb(3.0, 3.0, 3.0);
+    -toolbar_fill: rgb(25.0, 25.0, 25.0);
+    -side-board-content-fill: rgb(45.0, 45.0, 45.0);
+   	-button-color: rgb(35, 35, 36);
+   	
+   	-color-primary: rgb(30, 30, 30);
+   	-color-primary-light: rgb(45, 45, 45);
+ 	-color-primary-dark: rgb(25, 25, 25);
+ 	
+   	-color-secondary: rgb(42, 42, 42);
+   	-color-secondary-light: rgb(42, 42, 42);
+   	-color-secondary-dark: rgb(42, 42, 42);
+   	
+   	-color-accent: rgb(60, 140, 160);
+   	-color-accent-light: rgb(70, 150, 170);
+   	-color-accent-dark: rgb(50, 130, 150);
+}
+
+.tool-bar {
+    -fx-base: -color-primary;
+    -fx-border-width: 0 0 2 0; 
+    -fx-border-color: -color-primary-dark;
+    -fx-background-color: -color-primary;
+    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
+    -fx-padding: 0.6em 0.416667em 0.5em 0.416667em;
+    -fx-effect: dropshadow(two-pass-box,rgba(20.0,20.0,20.0,0.65),22.0,0.6,0.0,12.0);
+}
+
+#footer-bar {
+    -fx-base: -color-primary;
+    -fx-border-width: 2 0 2 0; 
+    -fx-border-color: -color-primary-dark;
+    -fx-background-color: -color-primary;
+    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
+    -fx-padding: 0.5em 0.416667em 0.9em 0.416667em;
+    -fx-effect: dropshadow(two-pass-box,rgba(20.0,20.0,20.0,0.65),22.0,0.6,0.0,12.0);
+}
+
+#side-board {
+ 	-fx-base: -color-primary;
+    -fx-border-width: 0 0 2 0; 
+    -fx-border-color: -color-primary-dark;
+    -fx-background-color: -color-primary;
+    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
+    -fx-padding: 0.5em 0.416667em 0.9em 0.416667em;
+}
+
+#side-board-content {
+    -fx-base: -toolbar_fill;
+    -fx-font-size: 12.0pt;
+    -fx-border-width: 60 10 0 10; 
+    -fx-border-color: -toolbar_fill;
+    -fx-background-color:-side-board-content-fill;
+    -fx-background-insets: 0;
+    -fx-padding:0;
+}
+
+.segmented-button-bar .button {
+	-fx-background-color: -color-primary-dark;
+   	-fx-border-width: 4 2 4 2; 
+    -fx-border-color: -color-primary-light;
+    -fx-background-insets: 0.0, 1.0 1.0 1.0 0.0, 2.0 1.0 1.0 1.0;
+    -fx-background-radius: 0.0;
+    -fx-padding: 0.5em 1.833333em 0.4em 1.833333em;
+}
+ 
+.segmented-button-bar .button:pressed {
+    -fx-background-color: -color-primary-light;
+    -fx-border-width: 1 1 1 1; 
+    -fx-border-color: -dark-highlight;
+	-fx-background-insets: 1, 1, 1, 1;
+   	-fx-background-radius: 0.0;
+}
+.tool-bar .spacer {
+    -fx-padding: 0.0 5.417em 0.0 0.0;
+}
