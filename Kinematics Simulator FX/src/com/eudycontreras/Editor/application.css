@@ -1,0 +1,5 @@
+.split-pane-divider {
+    -fx-padding: 10 5 10 5 ;
+    -fx-background-color: rgb(40,40,40) ;
+    -fx-background-insets: 0;
+}
