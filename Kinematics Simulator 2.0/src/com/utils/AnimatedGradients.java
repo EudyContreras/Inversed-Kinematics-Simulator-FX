@@ -15,8 +15,8 @@ protected static double durationDelta = 0.0;
 protected static double externalDelta = 0.1;
 protected static double internalDelta = 1;
 
-protected static Color baseExternalColor = Color.rgb(25, 25, 25);
-protected static Color baseInternalColor = Color.rgb(145, 145, 145);
+protected static Color baseExternalColor = Color.rgb(200, 0, 0);
+protected static Color baseInternalColor = Color.rgb(200, 0, 0);
  
 public static void main(String[] args) {
     launch(args);

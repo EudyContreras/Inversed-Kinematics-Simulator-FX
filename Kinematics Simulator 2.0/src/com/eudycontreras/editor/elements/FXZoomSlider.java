@@ -12,10 +12,6 @@ import javafx.scene.Group;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.RadialGradient;
-import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
@@ -34,10 +30,6 @@ public class FXZoomSlider extends Group {
 	private Rectangle frame = new Rectangle();
 	private Rectangle track = new Rectangle();
 	private Rectangle fill = new Rectangle();
-	
-	private String colorValue = "radial-gradient(focus-angle 45deg, focus-distance 50%, center 50% 50%, radius 50%, rgb(0,170,255) 0%, rgb(0,140,240) 100%)";
-
-	private RadialGradient gradient = RadialGradient.valueOf(colorValue);
 
 	private DoubleProperty zoomProperty = new SimpleDoubleProperty(1.0);
 	

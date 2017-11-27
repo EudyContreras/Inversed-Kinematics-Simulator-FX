@@ -1,14 +1,19 @@
 package com.eudycontreras.editor.elements;
 
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
 public class FXEditorGrid{
 
+
 	private Canvas grid = new Canvas();
-	
+
 	private Color light = Color.rgb(90, 90, 90);
 	private Color dark = Color.rgb(60, 60, 60);
 	
@@ -55,8 +60,25 @@ public class FXEditorGrid{
                 gc.fillRect(i, j, blockSize, blockSize);
             }
         }
-		
+        
+        //this.overlay = createOverlay(grid);
 	}
+	
+	private ImageView createOverlay(Canvas grid){
+		ImageView overlay = new ImageView();
+		WritableImage writableImage = new WritableImage((int) grid.getWidth(), (int) grid.getHeight());
+		SnapshotParameters parameters = new SnapshotParameters();
+		
+		parameters.setFill(Color.TRANSPARENT);
+		
+		overlay.setImage(grid.snapshot(parameters, writableImage));
+		
+		overlay.setCache(true);
+		overlay.setCacheHint(CacheHint.SPEED);
+		
+		return overlay;
+	}
+
 	
 	public Node get(){
 		return grid;

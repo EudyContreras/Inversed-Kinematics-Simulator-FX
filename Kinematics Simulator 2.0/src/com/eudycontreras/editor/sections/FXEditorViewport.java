@@ -14,7 +14,7 @@ public class FXEditorViewport {
 		this.viewPort.setPickOnBounds(false);	
 	}
 	
-	public Node get(){
+	public Pane get(){
 		return viewPort;
 	}
 	

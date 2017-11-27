@@ -9,8 +9,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Shape;
 
-public abstract class FXJointView implements IFXJointView{
-	
+public abstract class FXJointView implements IFXJointView{	
 
 	public static final IFXJointView FLESH_A = getFXJointView(FXJointViewType.TYPE_A);
 	
@@ -30,7 +29,6 @@ public abstract class FXJointView implements IFXJointView{
 	protected Color mainColor = Color.DODGERBLUE;
 	protected Color centerColor = Color.BLACK;
 	protected Color strokeColor = Color.DODGERBLUE.deriveColor(1, 1, 1, 0.3);
-	
 	
 	public static IFXJointView getFXJointView(FXJointViewType type) {
 		switch(type){
@@ -92,7 +90,6 @@ public abstract class FXJointView implements IFXJointView{
 		}
 		return null;
 	}
-
 	
 	public double getCenterX() {
 		return centerX;
@@ -220,15 +217,15 @@ public abstract class FXJointView implements IFXJointView{
 		@Override
 		public void setInnerRadius(double innerRadius) {
 			this.innerRadius = innerRadius;
-			this.smallCircle.setRadiusX(outerRadius);
-			this.smallCircle.setRadiusY(outerRadius);
+			this.smallCircle.setRadiusX(innerRadius);
+			this.smallCircle.setRadiusY(innerRadius);
 		}
 
 		@Override
 		public void setCenterRadius(double centerRadius) {
 			this.centerRadius = centerRadius;
-			this.centerCircle.setRadiusX(outerRadius);
-			this.centerCircle.setRadiusY(outerRadius);
+			this.centerCircle.setRadiusX(centerRadius);
+			this.centerCircle.setRadiusY(centerRadius);
 		}
 
 		@Override
@@ -246,7 +243,7 @@ public abstract class FXJointView implements IFXJointView{
 		@Override
 		public void setMainColor(Color mainColor) {
 			this.mainColor = mainColor;
-			this.shape.setFill(mainColor.deriveColor(1, 1, 1, 0.4));
+			this.shape.setFill(mainColor.deriveColor(1, 1, 1, 1));
 			this.shape.setStroke(mainColor);
 		}
 

@@ -117,10 +117,10 @@ public class FXBaseIndicator extends Group {
 		
 		this.markerSize = radius*0.65;
 		
-		this.triangle[0] = new FXTriangle(markerSize,markerSize,dark,dark,2,Direction.UP);
-		this.triangle[1] = new FXTriangle(markerSize,markerSize,dark,dark,2,Direction.DOWN);
-		this.triangle[2] = new FXTriangle(markerSize,markerSize,dark,dark,2,Direction.LEFT);
-		this.triangle[3] = new FXTriangle(markerSize,markerSize,dark,dark,2,Direction.RIGHT);
+		this.triangle[0] = new FXTriangle(markerSize,markerSize,FXPaintResources.ACCENT_COLOR,dark,2,Direction.UP);
+		this.triangle[1] = new FXTriangle(markerSize,markerSize,FXPaintResources.ACCENT_COLOR,dark,2,Direction.DOWN);
+		this.triangle[2] = new FXTriangle(markerSize,markerSize,FXPaintResources.ACCENT_COLOR,dark,2,Direction.LEFT);
+		this.triangle[3] = new FXTriangle(markerSize,markerSize,FXPaintResources.ACCENT_COLOR,dark,2,Direction.RIGHT);
 		
 		this.triangle[0].setTranslateX(centerX - markerSize/2);
 		this.triangle[0].setTranslateY(centerY - (radius + markerSize/2));

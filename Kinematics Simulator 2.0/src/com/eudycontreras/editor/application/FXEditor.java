@@ -7,12 +7,20 @@ import com.eudycontreras.editor.elements.FXZoomSlider;
 import com.eudycontreras.editor.gestures.FXEditorGestures;
 import com.eudycontreras.editor.handlers.FXResizeHandler;
 import com.eudycontreras.editor.handlers.FXStylesHandler;
-import com.eudycontreras.editor.sections.*;
+import com.eudycontreras.editor.sections.FXEditorFooter;
+import com.eudycontreras.editor.sections.FXEditorSideBoard;
+import com.eudycontreras.editor.sections.FXEditorToolbar;
+import com.eudycontreras.editor.sections.FXEditorViewport;
+import com.eudycontreras.editor.sections.FXEditorWindow;
+import com.eudycontreras.javafx.fbk.samples.Armature;
 import com.eudycontreras.models.Size;
 import com.eudycontreras.observers.FXObserver;
 import com.eudycontreras.utilities.FXPaintUtility;
+
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
@@ -48,8 +56,11 @@ public class FXEditor implements FXObserver<FXJoint> {
 	private FXEditorWindow rootWindow = new FXEditorWindow();
 	
 	private Scene scene = new Scene(rootWindow,Color.BLACK);
+	
+	private Stage stage = null;
 
 	public FXEditor(Stage stage, double inputWidth, double inputHeight, Paint paint) {
+		this.stage = stage;
 		this.width = inputWidth*4;
 		this.height = inputHeight*4;
 			
@@ -73,7 +84,7 @@ public class FXEditor implements FXObserver<FXJoint> {
 		
 		zoomSlider.setTranslateX(28);
 		viewPort.addElement(zoomSlider);
-		
+
 		panner = new FXEditorGestures(this, scene, workWindow, zoomSlider);
 		panner.addPannableContent(scene, workWindow, zoomSlider);
 		//splitPane.setDividerPositions(0.22);
@@ -87,13 +98,18 @@ public class FXEditor implements FXObserver<FXJoint> {
 		layoutWindow.prefWidthProperty().bind(scene.widthProperty());
 		layoutWindow.prefHeightProperty().bind(scene.heightProperty());
 		
-		workWindow.getChildren().add(editorGrid.get());
+		Platform.runLater(new Runnable() {
+			  @Override public void run() {
+				  workWindow.getChildren().add(0,editorGrid.get());   
+			  }
+			});
+		
 		workWindow.getChildren().add(indicator);
 		
 		rootWindow.getChildren().add(workWindow);
 		rootWindow.getChildren().add(mainWindow);
 		rootWindow.getChildren().add(layoutWindow);
-		
+
 		FXResizeHandler.makeResizable(sideBoard.getContent());
 
 		rootWindow.setBackground(FXPaintUtility.background(Color.rgb(40, 40, 41)));
@@ -104,26 +120,22 @@ public class FXEditor implements FXObserver<FXJoint> {
 		stage.setWidth(inputWidth);
 		stage.setHeight(inputHeight);
 		stage.show();
-
+		
+		workWindow.getChildren().add(new Armature().createArmature(stage, scene, workWindow.getWidth(), workWindow.getHeight()));
+		
 	}
+	
 
 	public void log(Object obj) {
 		System.out.println(obj);
 	}
 
 
-	EventHandler<KeyEvent> keyHandler = e -> {
-
-		switch (e.getCode()) {
-
-		case D:
-			if (e.isControlDown()) {
-
+	private EventHandler<KeyEvent> keyHandler = e -> {
+		if(e.isControlDown()){
+			if(e.getCode() == KeyCode.ENTER){
+				stage.setFullScreen(!stage.isFullScreen());
 			}
-			break;
-		default:
-			break;
-
 		}
 	};
 

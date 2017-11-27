@@ -11,12 +11,10 @@ import javafx.scene.shape.StrokeType;
 
 public abstract class FXBoneView implements IFXBoneView{
 	
-
 	public static final IFXBoneView BONE_A = getFXBoneView(FXBoneViewType.TYPE_A);
 	
 	public static final IFXBoneView BONE_B = getFXBoneView(FXBoneViewType.TYPE_B);
 	
-
 	protected double x = 0;
 	protected double y = 0;
 	
@@ -192,7 +190,6 @@ public abstract class FXBoneView implements IFXBoneView{
 			this.shape.setStroke(stroke);
 		}
 	}
-
 	
 	private static class FXBoneViewB extends FXBoneView{
 		

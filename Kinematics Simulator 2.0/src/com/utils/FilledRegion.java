@@ -29,8 +29,8 @@ public class FilledRegion extends Region {
 	private int duration;
 
 	public FilledRegion() {
-		oldExternalColor = getRandomColor(AnimatedGradients.baseExternalColor, AnimatedGradients.externalDelta);
-		oldInternalColor = getRandomColor(AnimatedGradients.baseInternalColor, AnimatedGradients.internalDelta);
+		oldExternalColor = getRandomColorA(AnimatedGradients.baseExternalColor, AnimatedGradients.externalDelta);
+		oldInternalColor = getRandomColorB(AnimatedGradients.baseInternalColor, AnimatedGradients.internalDelta);
 		externalColor.set(oldExternalColor);
 		internalColor.set(oldInternalColor);
 		setMinWidth(75);
@@ -58,8 +58,8 @@ public class FilledRegion extends Region {
 				new KeyValue(externalColor, oldExternalColor),
 				new KeyValue(internalColor, oldInternalColor));
 
-		oldExternalColor = getRandomColor(AnimatedGradients.baseExternalColor, AnimatedGradients.externalDelta);
-		oldInternalColor = getRandomColor(AnimatedGradients.baseInternalColor, AnimatedGradients.internalDelta);
+		oldExternalColor = getRandomColorA(AnimatedGradients.baseExternalColor, AnimatedGradients.externalDelta);
+		oldInternalColor = getRandomColorB(AnimatedGradients.baseInternalColor, AnimatedGradients.internalDelta);
 
 		KeyFrame kf2 = new KeyFrame(new Duration(duration),
 				new KeyValue(externalColor, oldExternalColor),
@@ -80,13 +80,30 @@ public class FilledRegion extends Region {
 		setBackground(bg);
 	}
 
-	private Color getRandomColor(Color color, double delta) {
+	private Color getRandomColorB(Color color, double delta) {
 
-		int index = (int) ((color.getGreen() + getRandomCoefficient(delta)) * 255);
+		int indexR = (int) ((color.getRed() + getRandomCoefficient(delta)) * 255);
+		int indexG = (int) ((color.getGreen() + getRandomCoefficient(delta)) * 255);
+		int indexB = (int) ((color.getBlue() + getRandomCoefficient(delta)) * 255);
+		
+		int newColorR = (indexR > 255) ? 255 : ((indexR < 0) ? 0 : indexR);
+		int newColorG = (indexG > 255) ? 255 : ((indexG < 0) ? 0 : indexG);
+		int newColorB = (indexB > 255) ? 255 : ((indexB < 0) ? 0 : indexB);
 
-		int newColor = (index > 225) ? 225 : ((index < 25) ? 25 : index);
+		return Color.rgb(newColorR, 0, 0);
+	}
+	
+	private Color getRandomColorA(Color color, double delta) {
 
-		return Color.rgb(newColor, newColor, newColor);
+		int indexR = (int) ((color.getRed() + getRandomCoefficient(delta)) * 255);
+		int indexG = (int) ((color.getGreen() + getRandomCoefficient(delta)) * 255);
+		int indexB = (int) ((color.getBlue() + getRandomCoefficient(delta)) * 255);
+		
+		int newColorR = (indexR > 10) ? 10 : ((indexR < 0) ? 0 : indexR);
+		int newColorG = (indexG > 255) ? 255 : ((indexG < 0) ? 0 : indexG);
+		int newColorB = (indexB > 255) ? 255 : ((indexB < 0) ? 0 : indexB);
+
+		return Color.rgb(newColorR, newColorR, newColorR);
 	}
 
 	private double getRandomCoefficient(double delta) {

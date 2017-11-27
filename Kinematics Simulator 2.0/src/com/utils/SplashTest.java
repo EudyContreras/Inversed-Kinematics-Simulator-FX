@@ -13,7 +13,7 @@ import javafx.stage.StageStyle;
 
 public class SplashTest extends Application{
  
-	private int itemsToLoad = 4000;
+	private int itemsToLoad = 20000;
 	private TilePane root;
 	private Stage mainWindow;
 	private Scene scene;
@@ -27,8 +27,8 @@ public class SplashTest extends Application{
 		Rectangle[] tiles = new Rectangle[itemsToLoad];
 		root = new TilePane();
 		for (int i = 0; i < tiles.length; i++) {
-			tiles[i] = new Rectangle(40,40, randomColor(250,255,40,200,0,0));
-			tiles[i].setStroke(randomColor(240,250,120,230,0,0));
+			tiles[i] = new Rectangle(20,20, randomColor(10,130,40,200,0,0));
+			tiles[i].setStroke(randomColor(20,60,120,230,0,0));
 			tiles[i].setStrokeWidth(2);
 		}
 		root.getChildren().addAll(tiles);
@@ -48,7 +48,8 @@ public class SplashTest extends Application{
 	}
 
 	private Color randomColor(int startR, int endR, int startG, int endG, int startB, int endB) {
-		return Color.rgb(getRandomColor(startR, endR), getRandomColor(startG, endG), getRandomColor(startB, endB));
+		int rgb = getRandomColor(startR, endR);
+		return Color.rgb(rgb,rgb,rgb);
 	}
 	
 	public int getRandomColor(int minValue, int maxValue) {
