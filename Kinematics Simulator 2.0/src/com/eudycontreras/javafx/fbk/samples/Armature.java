@@ -35,7 +35,7 @@ public class Armature {
 		FBKSegment head1 = new FBKSegment(new FBKVector(-200,0),100);
 		//FBKSegment head2 = new FBKSegment(new FBKVector(-200,140),100);
 
-		addContent(skeleton, head1);
+		addContent(skeleton, head1, true);
 		//addContent(skeleton, head2);
 		
 		//createRoot(skeleton, root);
@@ -93,34 +93,40 @@ public class Armature {
 		root.getContent().addAll(joint.getNode());
 	}
 
-	private void addContent(FBKSegmentChain skeleton, FBKSegment segment) {
+	private void addContent(FBKSegmentChain skeleton, FBKSegment segment, boolean root) {
 
 		IFXBoneView bone = FXBoneView.getFXBoneView(FXBoneViewType.TYPE_A, 10, 0, segment.getLength()/2 - 10, segment.getLength()/5);
 		bone.setStrokeWidth(1);
-		bone.setFill(Color.rgb(170, 170, 170,0.5));
+		bone.setFill(Color.rgb(170, 170, 170,0.65));
 		bone.setStroke(Color.rgb(170, 170, 170, 1));
 		
-		IFXJointView joint = FXJointView.getFXJointView(FXJointViewType.TYPE_A, 0, 0, 7);
-		joint.setCenterColor(Color.rgb(170, 170, 170,0.1));
+		IFXJointView joint = FXJointView.getFXJointView(FXJointViewType.TYPE_A, 0, 0, root ? 14 : 10);
+		joint.setCenterRadius(root ? 8 : 6);
+	
+		joint.setCenterColor(Color.TRANSPARENT);
 		joint.setMainColor(FXPaintResources.ACCENT_COLOR_LIGHT);
-		joint.setCenterRadius(7);
 
 		bone.getShape().setOnMousePressed(e -> {
-			bone.setFill(Color.rgb(170, 170, 170,1));
-			
+			bone.setFill(FXPaintResources.ACCENT_COLOR_LIGHT.deriveColor(1,1,1,0.5));
+			bone.setStroke(FXPaintResources.ACCENT_COLOR_LIGHT);
 			if(skeleton.getAbsoluteAncestor().getKinematicsType() != FBKKinematicsType.FORWARD){
 				skeleton.getAbsoluteAncestor().setKinematicsType(FBKKinematicsType.FORWARD);
 			}
 		});
 		
 		bone.getShape().setOnMouseReleased(e -> {
+			bone.setFill(Color.rgb(170, 170, 170,0.5));
+			bone.setStroke(Color.rgb(170, 170, 170, 1));
 			if(skeleton.getAbsoluteAncestor().getKinematicsType() == FBKKinematicsType.FORWARD){
 				skeleton.getAbsoluteAncestor().setKinematicsType(FBKKinematicsType.INVERSED);
 				skeleton.getAbsoluteAncestor().removeAllConstraints();
 			}
-			bone.setFill(Color.rgb(170, 170, 170,0.5));
 			if(segment.isConstrained()){
 				segment.setConstrained(false);
+			}
+			
+			if(segment.isLocked()){
+				segment.computateAngleConstraints();
 			}
 		});
 		
@@ -153,7 +159,15 @@ public class Armature {
 							joint.setMainColor(FXPaintResources.ACCENT_COLOR_LIGHT);
 						} else {
 							segment.setConstrained(true, FBKConstraintPivot.HEAD);
-							joint.setMainColor(Color.rgb(200, 150, 0));
+							joint.setMainColor(Color.rgb(230, 150, 0));
+						}
+					}else{
+						if (segment.isLocked()) {
+							segment.setLocked(false);
+							joint.setMainColor(FXPaintResources.ACCENT_COLOR_LIGHT);
+						} else {
+							segment.setLocked(true);
+							joint.setMainColor(Color.rgb(170, 170, 170, 1));
 						}
 					}
 				}
@@ -164,10 +178,10 @@ public class Armature {
 	}
 
 	private void addTailContent(FBKSegmentChain skeleton, FBKSegment segment) {
-		IFXJointView joint = FXJointView.getFXJointView(FXJointViewType.TYPE_A, segment.getLength(), 0, 5);
-		joint.setCenterColor(FXPaintResources.ACCENT_COLOR);
-		joint.setMainColor(FXPaintResources.ACCENT_COLOR);
-		joint.setCenterRadius(4);
+		IFXJointView joint = FXJointView.getFXJointView(FXJointViewType.TYPE_A, segment.getLength(), 0, 4);
+		joint.setCenterColor(Color.rgb(170, 170, 170, 1));
+		joint.setMainColor(Color.rgb(170, 170, 170, 1));
+		joint.setCenterRadius(6);
 
 		joint.getNode().setOnMouseDragged(e -> {
 			Point2D point = skeleton.sceneToLocal(e.getSceneX(), e.getSceneY());
@@ -184,13 +198,13 @@ public class Armature {
 	private FBKSegment createChain(FBKSegmentChain skeleton, double length, int size, double maxAngle, double minAngle) {
 		FBKSegment head = new FBKSegment(length);
 
-		addContent(skeleton, head);
+		addContent(skeleton, head, false);
 
 		for (int i = 0; i < size-1; i++) {
 
 			final FBKSegment FBKSegment = new FBKSegment(length, 0, minAngle, maxAngle);
 
-			addContent(skeleton, FBKSegment);
+			addContent(skeleton, FBKSegment, false);
 
 			head.addChild(FBKSegment);
 

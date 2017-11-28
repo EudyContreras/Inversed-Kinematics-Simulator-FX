@@ -22,7 +22,7 @@ public class FXPaintResources {
 	
 	public static final Color ACCENT_COLOR = Color.rgb(50, 140, 170);
 	
-	public static final Color ACCENT_COLOR_LIGHT = Color.rgb(60, 160, 190);
+	public static final Color ACCENT_COLOR_LIGHT = Color.rgb(70, 190, 220);
 	
 	public static final Color ACCENT_COLOR_DARK = Color.rgb(30, 120, 150);
 			

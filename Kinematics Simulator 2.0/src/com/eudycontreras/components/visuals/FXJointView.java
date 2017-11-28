@@ -179,14 +179,21 @@ public abstract class FXJointView implements IFXJointView{
 
 			shape.setFill(mainColor.deriveColor(1, 1, 1, 0.3));
 			shape.setStroke(mainColor);
-			shape.setStrokeWidth(1);
+			shape.setStrokeWidth(1.5);
 
 			merger.getChildren().addAll(centerCircle, shape);
 
 			merger.setTranslateX(centerX);
 			merger.setTranslateY(centerY);
+	
+		}
+		
+		public void updateShape(){
+			merger.getChildren().remove(shape);
 			
-			centerCircle.strokeProperty().bind(shape.strokeProperty());
+			shape = Path.subtract(bigCircle, smallCircle);
+
+			merger.getChildren().add(shape);
 		}
 
 		@Override
@@ -205,6 +212,8 @@ public abstract class FXJointView implements IFXJointView{
 			setOuterRadius(radius);
 			setInnerRadius(radius * 0.7);
 			setCenterRadius(radius * 0.3);
+			
+			this.updateShape();
 		}
 
 		@Override
@@ -212,6 +221,8 @@ public abstract class FXJointView implements IFXJointView{
 			this.outerRadius = outerRadius;
 			this.bigCircle.setRadiusX(outerRadius);
 			this.bigCircle.setRadiusY(outerRadius);
+			
+			this.updateShape();
 		}
 
 		@Override
@@ -219,6 +230,8 @@ public abstract class FXJointView implements IFXJointView{
 			this.innerRadius = innerRadius;
 			this.smallCircle.setRadiusX(innerRadius);
 			this.smallCircle.setRadiusY(innerRadius);
+			
+			this.updateShape();
 		}
 
 		@Override
@@ -226,6 +239,8 @@ public abstract class FXJointView implements IFXJointView{
 			this.centerRadius = centerRadius;
 			this.centerCircle.setRadiusX(centerRadius);
 			this.centerCircle.setRadiusY(centerRadius);
+			
+			this.updateShape();
 		}
 
 		@Override
@@ -243,8 +258,12 @@ public abstract class FXJointView implements IFXJointView{
 		@Override
 		public void setMainColor(Color mainColor) {
 			this.mainColor = mainColor;
-			this.shape.setFill(mainColor.deriveColor(1, 1, 1, 1));
+			this.smallCircle.setFill(Color.TRANSPARENT);
+			this.bigCircle.setFill(Color.TRANSPARENT);
+			this.updateShape();
+			this.shape.setFill(mainColor.deriveColor(1, 1, 1, 0.45));
 			this.shape.setStroke(mainColor);
+			this.centerCircle.setStroke(mainColor);
 		}
 
 		@Override
@@ -272,11 +291,11 @@ public abstract class FXJointView implements IFXJointView{
 	    private Line bottomLeftTopRightLine;
 	    
 	    public FXJointViewB(double outerRadius){
-	    	this(outerRadius, outerRadius * 0.5);
+	    	this(outerRadius, outerRadius * 0.1);
 	    }
 	    
 	    public FXJointViewB(double outerRadius, Color mainColor){
-	    	this(outerRadius, outerRadius * 0.5, mainColor);
+	    	this(outerRadius, outerRadius * 0.1, mainColor);
 	    }
 	    
 	    public FXJointViewB(double outerRadius, double innerRadius){
@@ -296,7 +315,7 @@ public abstract class FXJointView implements IFXJointView{
 	    	this.centerY = centerY;
 	    	this.outerRadius = outerRadius;
 	    	this.innerRadius = innerRadius;
-	    	this.sectionDistance = outerRadius/2;
+	    	this.sectionDistance = outerRadius/3;
 	    	this.mainColor = mainColor;
 	    	
 			outerCircle = new Circle(outerRadius);
@@ -367,7 +386,7 @@ public abstract class FXJointView implements IFXJointView{
 		@Override
 		public void setRadius(double radius) {
 			this.setOuterRadius(radius);
-			this.setInnerRadius(radius * 0.5);
+			this.setInnerRadius(radius * 0);
 		}
 
 		@Override

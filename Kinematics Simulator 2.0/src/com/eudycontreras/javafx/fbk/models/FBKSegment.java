@@ -3,6 +3,8 @@ package com.eudycontreras.javafx.fbk.models;
 
 import java.util.List;
 
+import com.eudycontreras.components.models.Bone;
+import com.eudycontreras.components.models.Bone.RotationConstraint;
 import com.eudycontreras.javafx.fbk.models.FBKIterator.FXIteration;
 
 import javafx.beans.binding.Bindings;
@@ -60,6 +62,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 
 	private final int segmentId;
 
+	private boolean locked = false;
 	private boolean constrained = false;
 	private boolean nodeBinding = false;
 
@@ -72,7 +75,8 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	private FBKVector lastHeadPoint = FBKVector.ZERO;
 	private FBKVector lastTailPoint = FBKVector.ZERO;
 	
-	private FKBRotationConstraint rotationConstraint = new FKBRotationConstraint(maxAngle,minAngle);
+	private FKBRotationConstraint angleConstraint = new FKBRotationConstraint(maxAngle,minAngle);
+	private FKBRotationConstraint angleConstraintMemory = new FKBRotationConstraint(maxAngle,minAngle);
 
 	private final PrivateParentProperty parent = new PrivateParentProperty();
 	
@@ -155,16 +159,32 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		return minAngle;
 	}
 	
+	public final double getMinAngle(FBKSegment initiator) {
+		if(initiator == null){
+			return angleConstraintMemory.getMinAngle();
+		}
+		return minAngle;
+	}
+	
 	public void setMinAngle(double angle){
 		this.minAngle = angle;
+		this.angleConstraintMemory.setMinAngle(minAngle);
 	}
 
 	public final double getMaxAngle() {
 		return maxAngle;
 	}
 	
+	public final double getMaxAngle(FBKSegment initiator) {
+		if(initiator == null){
+			return angleConstraintMemory.getMaxAngle();
+		}
+		return maxAngle;
+	}
+	
 	public void setMaxAngle(double angle){
 		this.maxAngle = angle;
+		this.angleConstraintMemory.setMaxAngle(maxAngle);	
 	}
 	
 	public FBKConstraintPivot getConstraintPivot(){
@@ -247,6 +267,10 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		this.content.set(list);
 	}
 
+	public boolean isLocked() {
+		return locked;
+	}
+	
 	public final double getAngle() {
 		return angle.get();
 	}
@@ -459,13 +483,36 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		applyKinematicsType(type, initiator, false);
 	}
 	
+	public void setLocked(boolean locked) {
+		
+		if(isLocked()){
+			if(!locked){
+				
+				if(angleConstraint != null){
+					minAngle = angleConstraintMemory.getMinAngle();
+					maxAngle = angleConstraintMemory.getMaxAngle();
+				}
+				
+				this.locked = locked;
+			}
+		}else{
+			if(locked){
+
+				minAngle = angle.get();
+				maxAngle = angle.get();
+				
+			
+				this.locked = locked;
+			}
+		}
+	}
 
 	private void applyKinematicsType(FBKKinematicsType type, FBKSegment initiator, boolean propagate){
 		this.kinematicsType = type;
 		switch(type){
 		case FORWARD:
-			rotationConstraint.setMinAngle(minAngle);
-			rotationConstraint.setMaxAngle(maxAngle);
+			angleConstraint.setMinAngle(minAngle);
+			angleConstraint.setMaxAngle(maxAngle);
 			
 			minAngle = getAngle();
 			maxAngle = getAngle();
@@ -473,8 +520,8 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			break;
 		case INVERSED:
 			
-			minAngle = rotationConstraint.getMinAngle();
-			maxAngle = rotationConstraint.getMaxAngle();
+			minAngle = angleConstraint.getMinAngle();
+			maxAngle = angleConstraint.getMaxAngle();
 			
 			break;	
 		}
@@ -494,7 +541,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		});
 	}
 
-	private void computateAngleConstraints(){
+	public void computateAngleConstraints(){
 		this.minAngle = getAngle();
 		this.maxAngle = getAngle();
 	}
@@ -708,8 +755,8 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			final double alpha = getAngle(point, getCurrentTail());
 			final double rotateValue = MAX_ANGLE * (alpha / MATH_PI);
 
-			final double minAngle = getMinAngle();
-			final double maxAngle = getMaxAngle();
+			final double minAngle = getMinAngle(initiator);
+			final double maxAngle = getMaxAngle(initiator);
 
 			if ((initiator != null) && (withinRange(minAngle, maxAngle))) {
 
