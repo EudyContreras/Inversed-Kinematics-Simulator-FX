@@ -17,7 +17,9 @@ public class FXEditorGestures  extends FXGestureHandler {
 	public static final double MAX_SCALE = 2.0d;
 	public static final double MIN_SCALE = 0.1d;
 	
+	@SuppressWarnings("unused")
 	private double lastX = -1;
+	@SuppressWarnings("unused")
 	private double lastY = -1;
 	
 	private FXEditorWindow pane;
@@ -82,9 +84,7 @@ public class FXEditorGestures  extends FXGestureHandler {
 		
 		lastX = dragContext.translateAnchorX + (point.getX() - dragContext.mouseAnchorX);
 		lastY = dragContext.translateAnchorY + (point.getY() - dragContext.mouseAnchorY);
-		
-		System.out.println("PRESSED");
-		
+	
 		performGesture(GestureType.MOUSE_PRESSED,event, point.getX(), point.getY());
 	}
 	
@@ -106,7 +106,7 @@ public class FXEditorGestures  extends FXGestureHandler {
 	@Override
 	protected void performMouseDragged(MouseEvent event) {
 		
-		if(event.isConsumed()) return;
+		if(event.isConsumed() || event.isControlDown()) return;
 		
 		Point2D point = new Point2D(event.getSceneX(), event.getSceneY());
 		
@@ -153,6 +153,7 @@ public class FXEditorGestures  extends FXGestureHandler {
 		performGesture(GestureType.MOUSE_SCROLLING,event, point.getX(), point.getY());
 	}	
 	
+	@SuppressWarnings("unused")
 	private boolean outSideParentBounds(Pane source){
 		
 		if(outSideHorizontalBounds(source) || outSideVerticalBounds(source)){

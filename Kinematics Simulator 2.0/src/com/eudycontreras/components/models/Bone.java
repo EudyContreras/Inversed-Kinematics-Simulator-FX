@@ -546,7 +546,6 @@ public class Bone implements Comparable<Bone>{
 
 			moveEndPoint(x, y);
 		}
-
 	}
 	
 	/**

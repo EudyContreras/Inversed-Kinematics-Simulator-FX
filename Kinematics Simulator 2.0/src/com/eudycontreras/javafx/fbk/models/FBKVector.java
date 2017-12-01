@@ -31,8 +31,8 @@ public class FBKVector {
 	}
 
 	public FBKVector(FBKVector vector) {
-		this.x = vector.x;
-		this.y = vector.y;
+		this.x = vector.getX();
+		this.y = vector.getY();
 	}
 
 	public FBKVector(double x, double y) {
@@ -41,8 +41,8 @@ public class FBKVector {
 	}
 
 	public FBKVector set(FBKVector vector) {
-		this.x = vector.x;
-		this.y = vector.y;
+		this.x = vector.getX();
+		this.y = vector.getY();
 
 		return this;
 	}
@@ -406,6 +406,14 @@ public class FBKVector {
 		return new FBKVector(point.getX(), point.getY());
 	}
 
+	public Point2D toPoint2D() {
+		return new Point2D(getX(), getY());
+	}
+	
+	public static Point2D toPoint2D(FBKVector vector) {
+		return new Point2D(vector.getX(), vector.getY());
+	}
+	
 	public static class FBKVectorCapsule {
 
 		private double distance;
@@ -433,4 +441,5 @@ public class FBKVector {
 			this.vector = vector;
 		}
 	}
+
 }
