@@ -10,7 +10,6 @@ import com.eudycontreras.javafx.fbk.models.FBKSegment.FBKConstraintPivot;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.input.MouseEvent;
@@ -69,6 +68,14 @@ public class FBKSegmentChain extends Parent {
 		});
 	}
 
+	public void addChild(Node node){
+		getChildren().add(node);
+	}
+	
+	public void removeChild(Node node){
+		getChildren().remove(node);
+	}
+	
 	public FBKSegmentChain(Pane pane, int segmentCount, float x, float y) {
 
 		this.base = new FBKVector(x, y);

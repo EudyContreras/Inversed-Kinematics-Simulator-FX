@@ -19,6 +19,7 @@ public abstract class FXGestureHandler {
 	protected DragContext dragContext = new DragContext();
 
 	private List<GestureEvent<MouseEvent>> mousePressed = new ArrayList<>();
+	private List<GestureEvent<MouseEvent>> mouseClicked = new ArrayList<>();
 	private List<GestureEvent<MouseEvent>> mouseReleased = new ArrayList<>();
 	private List<GestureEvent<MouseEvent>> mouseEntered = new ArrayList<>();
 	private List<GestureEvent<MouseEvent>> mouseExited = new ArrayList<>();
@@ -35,6 +36,10 @@ public abstract class FXGestureHandler {
 		this.mousePressed.add(mousePressed);
 	}
 
+	public void addMouseClickedAction(GestureEvent<MouseEvent> mouseClicked) {
+		this.mouseClicked.add(mouseClicked);
+	}
+	
 	public void addMouseReleasedAction(GestureEvent<MouseEvent> mouseReleased) {
 		this.mouseReleased.add(mouseReleased);
 	}
@@ -67,6 +72,10 @@ public abstract class FXGestureHandler {
 		return onMousePressedEventHandler;
 	}
 
+	protected EventHandler<MouseEvent> getOnMouseClickedEventHandler() {
+		return onMouseClickedEventHandler;
+	}
+	
 	protected EventHandler<MouseEvent> getOnMouseReleasedEventHandler() {
 		return onMouseReleasedEventHandler;
 	}
@@ -103,6 +112,13 @@ public abstract class FXGestureHandler {
 	};
 	
 	private EventHandler<MouseEvent> onMouseExitedEventHandler = new EventHandler<MouseEvent>() {
+
+		public void handle(MouseEvent event) {
+			performMouseExited(event);
+		}
+	};
+	
+	private EventHandler<MouseEvent> onMouseClickedEventHandler = new EventHandler<MouseEvent>() {
 
 		public void handle(MouseEvent event) {
 			performMouseExited(event);
@@ -167,38 +183,43 @@ public abstract class FXGestureHandler {
 	protected void performGesture(GestureType type, MouseEvent e, double x, double y){
 		switch(type){
 		case MOUSE_PRESSED:
-			FXIterator.Iterate(mousePressed, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mousePressed){
 				current.performGesture(e, x, y);
-			});
+			}
+			break;
+		case MOUSE_CLICKED:
+			for(GestureEvent<MouseEvent> current : mouseClicked){
+				current.performGesture(e, x, y);
+			}
 			break;
 		case MOUSE_RELEASED:
-			FXIterator.Iterate(mouseReleased, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mouseReleased){
 				current.performGesture(e, x, y);
-			});
+			}
 			break;
 		case MOUSE_DRAGGED:
-			FXIterator.Iterate(mouseDragged, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mouseDragged){
 				current.performGesture(e, x, y);
-			});
+			}
 			break;
 		case MOUSE_ENTERED:
-			FXIterator.Iterate(mouseEntered, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mouseEntered){
 				current.performGesture(e, x, y);
-			});
+			}
 			break;
 		case MOUSE_EXITED:
-			FXIterator.Iterate(mouseExited, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mouseExited){
 				current.performGesture(e, x, y);
-			});
+			}
 		case MOUSE_DRAGG_STARTED:
-			FXIterator.Iterate(mouseDraggStarted, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mouseDraggStarted){
 				current.performGesture(e, x, y);
-			});
+			}
 			break;
 		case MOUSE_DRAGG_ENDED:
-			FXIterator.Iterate(mouseDraggEnded, (current, index)-> {
+			for(GestureEvent<MouseEvent> current : mouseDraggEnded){
 				current.performGesture(e, x, y);
-			});
+			}
 			break;	
 		default:
 			break;
@@ -210,6 +231,8 @@ public abstract class FXGestureHandler {
 	protected abstract void performMouseExited(MouseEvent event);
 
 	protected abstract void performMousePressed(MouseEvent event);
+	
+	protected abstract void performMouseClicked(MouseEvent event);
 
 	protected abstract void performMouseReleased(MouseEvent event);
 
@@ -238,6 +261,7 @@ public abstract class FXGestureHandler {
 	
 	public enum GestureType{
 		MOUSE_PRESSED, 
+		MOUSE_CLICKED,
 		MOUSE_RELEASED, 
 		MOUSE_ENTERED, 
 		MOUSE_EXITED, 

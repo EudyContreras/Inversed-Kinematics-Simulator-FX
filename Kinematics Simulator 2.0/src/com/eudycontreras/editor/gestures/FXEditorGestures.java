@@ -11,7 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 
-public class FXEditorGestures  extends FXGestureHandler {
+public class FXEditorGestures extends FXGestureHandler {
 
 
 	public static final double MAX_SCALE = 2.0d;
@@ -72,20 +72,23 @@ public class FXEditorGestures  extends FXGestureHandler {
 	}
 
 	@Override
+	protected void performMouseClicked(MouseEvent event) {
+		performGesture(GestureType.MOUSE_CLICKED,event, event.getSceneX(), event.getSceneY());
+	}
+	
+	@Override
 	protected void performMousePressed(MouseEvent event) {
-		
-		Point2D point = new Point2D(event.getSceneX(), event.getSceneY());
-		
+	
 		dragContext.mouseAnchorX = event.getSceneX();
 		dragContext.mouseAnchorY = event.getSceneY();
 
 		dragContext.translateAnchorX = pane.getTranslateX();
 		dragContext.translateAnchorY = pane.getTranslateY();
 		
-		lastX = dragContext.translateAnchorX + (point.getX() - dragContext.mouseAnchorX);
-		lastY = dragContext.translateAnchorY + (point.getY() - dragContext.mouseAnchorY);
+		lastX = dragContext.translateAnchorX + (event.getSceneX() - dragContext.mouseAnchorX);
+		lastY = dragContext.translateAnchorY + (event.getSceneY() - dragContext.mouseAnchorY);
 	
-		performGesture(GestureType.MOUSE_PRESSED,event, point.getX(), point.getY());
+		performGesture(GestureType.MOUSE_PRESSED,event, event.getSceneX(), event.getSceneY());
 	}
 	
 	@Override
@@ -116,8 +119,7 @@ public class FXEditorGestures  extends FXGestureHandler {
 		pane.setTranslateX(newX);
 		pane.setTranslateY(newY);
 
-		performGesture(GestureType.MOUSE_DRAGGED, event, newX, newY);
-			
+		performGesture(GestureType.MOUSE_DRAGGED, event, newX, newY);			
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package com.eudycontreras.editor.application;
 
-import com.eudycontreras.components.handlers.FXJoint;
 import com.eudycontreras.editor.elements.FXBaseIndicator;
 import com.eudycontreras.editor.elements.FXEditorGrid;
 import com.eudycontreras.editor.elements.FXZoomSlider;
@@ -12,9 +11,8 @@ import com.eudycontreras.editor.sections.FXEditorSideBoard;
 import com.eudycontreras.editor.sections.FXEditorToolbar;
 import com.eudycontreras.editor.sections.FXEditorViewport;
 import com.eudycontreras.editor.sections.FXEditorWindow;
-import com.eudycontreras.javafx.fbk.samples.Armature;
+import com.eudycontreras.javafx.fbk.samples.FXArmatureManager;
 import com.eudycontreras.models.Size;
-import com.eudycontreras.observers.FXObserver;
 import com.eudycontreras.utilities.FXPaintUtility;
 
 import javafx.application.Platform;
@@ -27,29 +25,20 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 
-public class FXEditor implements FXObserver<FXJoint> {
+public class FXEditor{
 
 	public static final String IMAGE_SOURCE_DIRECTORY = "com/eudycontreras/resources/images/";
     private static final FXStylesHandler helper = new FXStylesHandler();
-	 
-	private int jointId = 0;
-	private int linkCount = 0;
 
 	private double width = 0;
 	private double height = 0;
-	
-	private boolean wasDragging = false;
-	private boolean useCurrent = false;
 
-	private boolean openingTools = false;
-	private boolean closingTools = false;
-	private boolean toolsClosed = false;
-	private boolean toolsOpened = true;
-
-	private FXEditorGestures panner = null;
+	private FXEditorGestures gestureHandler = null;
 
 	private FXEditorWindow mainWindow = new FXEditorWindow();
 	private FXEditorWindow workWindow = new FXEditorWindow();
+	
+	private FXArmatureManager armature;
 	
 	private BorderPane layoutWindow = new BorderPane();
 	
@@ -85,9 +74,10 @@ public class FXEditor implements FXObserver<FXJoint> {
 		zoomSlider.setTranslateX(28);
 		viewPort.addElement(zoomSlider);
 
-		panner = new FXEditorGestures(this, scene, workWindow, zoomSlider);
-		panner.addPannableContent(scene, workWindow, zoomSlider);
-		//splitPane.setDividerPositions(0.22);
+		gestureHandler = new FXEditorGestures(this, scene, workWindow, zoomSlider);
+		gestureHandler.addPannableContent(scene, workWindow, zoomSlider);
+		armature = new FXArmatureManager(stage,scene,workWindow.getWidth(), workWindow.getHeight(),gestureHandler);
+		
 		
 		layoutWindow.setCenter(viewPort.get());
 		layoutWindow.setRight(sideBoard.get());
@@ -121,7 +111,7 @@ public class FXEditor implements FXObserver<FXJoint> {
 		stage.setHeight(inputHeight);
 		stage.show();
 		
-		workWindow.getChildren().add(new Armature().createArmature(stage, scene, workWindow.getWidth(), workWindow.getHeight()));
+		workWindow.getChildren().add(armature.getSkeleton());
 		
 	}
 	
@@ -132,6 +122,7 @@ public class FXEditor implements FXObserver<FXJoint> {
 
 
 	private EventHandler<KeyEvent> keyHandler = e -> {
+		armature.reportKeyEvent(e);
 		if(e.isControlDown()){
 			if(e.getCode() == KeyCode.ENTER){
 				stage.setFullScreen(!stage.isFullScreen());
@@ -162,21 +153,6 @@ public class FXEditor implements FXObserver<FXJoint> {
 	
 	public Scene getScene(){
 		return scene;
-	}
-
-	@Override
-	public void update() {
-
-	}
-
-	@Override
-	public void setSubject(FXJoint subject) {
-
-	}
-
-	@Override
-	public void notify(FXJoint subject) {
-		// dialog.setJoint(subject);
 	}
 
 }

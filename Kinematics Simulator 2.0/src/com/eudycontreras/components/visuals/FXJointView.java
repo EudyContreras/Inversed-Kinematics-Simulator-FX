@@ -1,5 +1,10 @@
 package com.eudycontreras.components.visuals;
 
+import com.eudycontreras.components.assist.FXSelectionAssist;
+import com.eudycontreras.components.assist.FXSelectionAssist.PulseMarker;
+
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
@@ -8,6 +13,7 @@ import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Shape;
+import javafx.util.Duration;
 
 public abstract class FXJointView implements IFXJointView{	
 
@@ -129,6 +135,8 @@ public abstract class FXJointView implements IFXJointView{
 		private Ellipse smallCircle = null;
 		private Ellipse centerCircle = null;
 
+		private PulseMarker pulser = FXSelectionAssist.createMarker(merger, mainColor, 0,0);
+		
 		public FXJointViewA(double radius) {
 			this(radius, Color.DODGERBLUE);
 		}
@@ -138,11 +146,11 @@ public abstract class FXJointView implements IFXJointView{
 		}
 
 		public FXJointViewA(double radius, Color mainColor, Color centerColor) {
-			this(0, 0, radius, radius * 0.65, radius * 0.30, mainColor, centerColor);
+			this(0, 0, radius, radius * 0.55, radius * 0.30, mainColor, centerColor);
 		}
 
 		public FXJointViewA(double centerX, double centerY, double radius, Color mainColor) {
-			this(centerX, centerY, radius, radius * 0.65, radius * 0.30, mainColor, Color.BLACK);
+			this(centerX, centerY, radius, radius * 0.55, radius * 0.30, mainColor, Color.BLACK);
 		}
 		
 		public FXJointViewA(double centerX, double centerY, double radiusOuter, double radiusInner, double radiusCenter, Color mainColor, Color centerColor) {
@@ -210,7 +218,7 @@ public abstract class FXJointView implements IFXJointView{
 		@Override
 		public void setRadius(double radius) {
 			setOuterRadius(radius);
-			setInnerRadius(radius * 0.7);
+			setInnerRadius(radius * 0.55);
 			setCenterRadius(radius * 0.3);
 			
 			this.updateShape();
@@ -277,6 +285,48 @@ public abstract class FXJointView implements IFXJointView{
 
 		@Override
 		public double getCenterRadius() { return 0;}
+
+		@Override
+		public void setSelected(boolean selected) {
+			ScaleTransition scale = new ScaleTransition(Duration.millis(250), merger);
+			
+			ParallelTransition parallel = new ParallelTransition(merger, scale);
+	
+			if(selected){
+				scale.setFromX(1);
+				scale.setFromY(1);
+				scale.setToX(1.3);
+				scale.setToY(1.3);
+				
+				if(merger.getScaleX() == 1.3){
+					return;
+				}
+				
+				pulser.setColor(mainColor);
+				pulser.startPulsing();
+	
+			}else{
+
+				scale.setFromX(1.3);
+				scale.setFromY(1.3);
+				scale.setToX(1);
+				scale.setToY(1);
+				
+				if(merger.getScaleX() == 10){
+					return;
+				}
+				
+				pulser.setColor(mainColor);
+				pulser.stopPulsing();
+			}
+			
+			parallel.play();
+		}
+
+		@Override
+		public void setStroke(Color stroke) {
+			this.shape.setStroke(stroke);
+		}
 
 	}
 	
@@ -397,6 +447,11 @@ public abstract class FXJointView implements IFXJointView{
 			this.shape.setFill(mainColor.deriveColor(1, 1, 1, 0.45));
 			this.shape.setStroke(mainColor);		
 		}
+		
+		@Override
+		public void setStroke(Color stroke) {
+			this.shape.setStroke(stroke);
+		}
 
 		@Override
 		public void setCenterColor(Color centerColor) {
@@ -405,6 +460,12 @@ public abstract class FXJointView implements IFXJointView{
 		@Override
 		public double getCenterRadius() {
 			return 0;
+		}
+
+		@Override
+		public void setSelected(boolean selected) {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 }

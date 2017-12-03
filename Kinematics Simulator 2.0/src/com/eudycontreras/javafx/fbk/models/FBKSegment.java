@@ -3,9 +3,9 @@ package com.eudycontreras.javafx.fbk.models;
 
 import java.util.List;
 
-import com.eudycontreras.components.models.Bone;
 import com.eudycontreras.components.models.Bone.PointType;
 import com.eudycontreras.javafx.fbk.listeners.FBKSegmentEventListener;
+import com.eudycontreras.javafx.fbk.listeners.FBKSegmentEventListener.FBKSegmentStatus;
 import com.eudycontreras.javafx.fbk.models.FBKIterator.FXIteration;
 
 import javafx.beans.binding.Bindings;
@@ -22,10 +22,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -34,7 +32,7 @@ import javafx.scene.transform.Rotate;
 
 public class FBKSegment  implements Comparable<FBKSegment>{
 
-	public static int ID = 0;
+	private static int ID = 0;
 
 	public enum FBKReach {		
 		FORWARD, BACKWARDS, BOTH
@@ -61,13 +59,16 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	public static final double MATH_PI = Math.PI;
 
 	public static final double DEFAULT_ANGLE = 0.0d;
-
+	
+	public static final double DEFAULT_LENGHT = 0.0d;
+	
 	public static final double ROTATION_RANGE = 360d;
 
 	public static final double MIN_ANGLE = -180.0d;
 	public static final double MAX_ANGLE = 180.0d;
 
-	private double length = 0d;
+	private double length = DEFAULT_LENGHT;
+	
 	private double minAngle = MIN_ANGLE;
 	private double maxAngle = MAX_ANGLE;
 
@@ -76,15 +77,15 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	private boolean locked = false;
 	private boolean constrained = false;
 	private boolean nodeBinding = false;
+	private boolean isEffector = false;
 
 	private FBKSegmentEventListener listener = null;
 
+	private FBKSegmentStatus segmentStatus = FBKSegmentStatus.ABSOLUTE_PARENT;
+	
 	private FBKConstraintPivot constraintPivot = FBKConstraintPivot.NONE;
 	
 	private FBKinematicsType kinematicsType = FBKinematicsType.INVERSED;
-	
-	private FBKVector lastHeadPoint = FBKVector.ZERO;
-	private FBKVector lastTailPoint = FBKVector.ZERO;
 	
 	private final FBKRotationConstraint angleConstraint = new FBKRotationConstraint(maxAngle,minAngle);
 	private final FBKRotationConstraint angleConstraintMain = new FBKRotationConstraint(maxAngle,minAngle);
@@ -150,9 +151,27 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	
 	public void setEventListener(FBKSegmentEventListener listener) {
 		this.listener = listener;
+		if(listener != null){
+			if(!isAbsoluteAncestor()){
+				if(hasChildren()){
+					if(hasSiblings()){
+						setSegmentStatus(FBKSegmentStatus.SIBLING);
+					}else{
+						setSegmentStatus(FBKSegmentStatus.ONLY_CHILD);
+					}
+				}else{
+					setSegmentStatus(FBKSegmentStatus.TAIL);
+				}
+			}
+			
+			angle.addListener((ov,oldValue,newValue)->{
+				listener.onAngleChanged(FBKSegment.this, newValue.doubleValue());
+
+			});
+		}
 	}
 	
-	public int getBoneId() {
+	public int getSegmentId() {
 		return segmentId;
 	}
 	
@@ -222,6 +241,19 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		return constraintPivot;
 	}
 
+	public FBKSegmentStatus getSegmentStatus() {
+		return segmentStatus;
+	}
+
+	public void setSegmentStatus(FBKSegmentStatus segmentStatus) {
+		if(this.segmentStatus != segmentStatus){
+			this.segmentStatus = segmentStatus;
+			if(listener != null){
+				listener.onSegmentStatusChange(this, segmentStatus);
+			}
+		}
+	}
+
 	public final Node getGroup() {
 		return group;
 	}
@@ -247,11 +279,11 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 	
 	public final FBKVector getLastHeadPoint(){
-		return lastHeadPoint;
+		return lastState.getHeadPoint();
 	}
 
 	public final FBKVector getLastTailPoint(){
-		return lastTailPoint;
+		return lastState.getTailPoint();
 	}
 	
 	public final FBKVector getCurrentHead() {
@@ -365,6 +397,29 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		}
 	}
 
+	
+	public boolean isEffector() {
+		return isEffector;
+	}
+
+	public void setEffector() {
+		
+		FBKSegment.traverseTree(this, segment-> {
+			if(!segment.equals(this)){
+				segment.setEffector(false);
+			}
+		});
+		setEffector(true);	
+	}
+	
+	public void setEffector(boolean isEffector) {
+		this.lastState.setEffector(this.isEffector);
+		this.isEffector = isEffector;		
+		if(listener != null){
+			listener.onEffectorStatusChanged(this,isEffector);
+		}		
+	}
+
 	public PrivateDoubleProperty getRotationProperty() {
 		return rotation;
 	}
@@ -397,6 +452,10 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		return children.isEmpty();
 	}
 	
+	public final boolean hasMultipleChildren(){
+		return children.size() >= 2;
+	}
+	
 	public final boolean hasChildren(){
 		return !children.isEmpty();
 	}
@@ -415,12 +474,32 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 	
 	public void clearDescendants() {
-		if(hasChildren())
-		FBKSegment.traverseDescendants(this, (s) -> {
-			s.getContent().clear();
-			s.clearDescendants();
-		});
-		children.clear();
+		if(hasChildren()){			
+			FBKSegment.traverseDescendants(this, (s) -> {
+				s.getContent().clear();
+				s.clearDescendants();
+			});
+
+			children.clear();		
+			
+			if(hasSiblings()){
+				FBKSegment.traverseSiblings(this, (s) -> {
+					if(s.hasChildren()){
+						s.getContent().clear();
+						s.clearDescendants();
+					}
+				});							
+			}
+			
+			if(listener != null){
+				if(!isAbsoluteAncestor() && !hasSiblings()){			
+					if(!hasChildren()){
+						setSegmentStatus(FBKSegmentStatus.TAIL);						
+					}
+				}
+			}
+		}
+		setLength(0);
 	}
 	
 	public void addChild(FBKSegment child) {
@@ -428,8 +507,19 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		if(child == null) return;
 		
 		if(!children.contains(child)){
-			children.add(child);
+			children.add(0,child);
 			
+			if (listener != null) {
+				if (!isAbsoluteAncestor()) {
+					if (!hasSiblings()) {
+						setSegmentStatus(FBKSegmentStatus.ONLY_CHILD);
+					
+					}else{
+						setSegmentStatus(FBKSegmentStatus.SIBLING);
+					}
+				} 			
+			}
+		
 			if(!nodeBinding)
 			child.setParent(this);
 			
@@ -459,6 +549,14 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		if(children.contains(segment)){
 			children.remove(segment);
 			
+			if(listener != null){
+				if(!isAbsoluteAncestor() && !hasSiblings()){			
+					if(!hasChildren()){
+						setSegmentStatus(FBKSegmentStatus.TAIL);						
+					}
+				}
+			}
+
 			if(!nodeBinding)
 			segment.setParent(null);
 		}
@@ -607,7 +705,11 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 				
 				if(listener != null){
 					listener.onSegmentUnlocked(this);
-				}		
+				}
+				
+				traverseSiblings(this, segment->{
+					segment.setLocked(locked, lockChildren);
+				});
 				
 				if(lockChildren){
 					for(FBKSegment child : getChildren()){
@@ -625,6 +727,10 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 					listener.onSegmentLocked(this);
 				}
 				
+				traverseSiblings(this, segment->{
+					segment.setLocked(locked, lockChildren);
+				});
+				
 				if(lockChildren){
 					for(FBKSegment child : getChildren()){
 						child.setLocked(locked, true);;
@@ -640,8 +746,8 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 	
 	private void saveCoordinates(){
-		this.lastHeadPoint = currentHead.get();
-		this.lastTailPoint = currentTail.get();
+		this.lastState.setHeadPoint(currentHead.get());
+		this.lastState.setTailPoint(currentTail.get());
 	}
 	
 	public void constraintHead(FBKVector base) {
@@ -683,8 +789,25 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		this.constraintPivot = constraintPivot;
 		this.constrained = constrained;
 		
+		if(listener != null){
+			if(constrained){
+				listener.onSegmentConstrained(this);
+			}else{
+				listener.onSegmentUnconstrained(this);
+			}
+		}		
 		traverseSiblings(this, segment->{
+			segment.lastState.setConstrained(segment.constrained);
+			segment.lastState.setConstraintPivot(segment.constraintPivot);
 			segment.constrained = constrained;
+			segment.constraintPivot = constraintPivot;		
+			if(segment.listener != null){
+				if(constrained){
+					segment.listener.onSegmentConstrained(segment);
+				}else{
+					segment.listener.onSegmentUnconstrained(segment);
+				}
+			}
 			segment.saveCoordinates();
 		});
 		
@@ -895,7 +1018,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 				this.setRotation(rotateValue);
 
 				this.setCurrentTail(createVector(point, alpha));
-
+				
 				if ((initiator == null) && (parent != null)) {
 
 					setAngle(borderAngle(rotateValue - parent.getRotation()));
@@ -908,6 +1031,13 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 						}
 					}else{
 						parent.moveTail(point, this);
+					}
+				}else{
+				
+					if(parent != null){
+						final double angle = borderAngle(rotateValue - parent.getRotation());
+						
+						setAngle(angle);	
 					}
 				}
 			}
@@ -1144,7 +1274,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 					oldSkeleton.getSegmentsWritable().remove(FBKSegment.this);
 				}
 				if (newSkeleton != null) {
-					newSkeleton.getSegmentsWritable().add(FBKSegment.this);
+					newSkeleton.getSegmentsWritable().add(0,FBKSegment.this);
 				}
 				final FBKSegment parentBone = getParent();
 				if (parentBone != null) {
@@ -1191,7 +1321,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 					final List<FBKSegment> children = value.getChildren();
 					
 					if (!children.contains(FBKSegment.this)) {
-						children.add(FBKSegment.this);
+						children.add(0,FBKSegment.this);
 					}
 					resetFromParent();
 				}
@@ -1266,6 +1396,10 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		
 		private boolean locked = false;
 		private boolean constrained = false;
+		private boolean effector = false;
+		
+		private FBKVector headPoint = FBKVector.ZERO;
+		private FBKVector tailPoint = FBKVector.ZERO;
 		
 		private FBKConstraintPivot constraintPivot = FBKConstraintPivot.NONE;
 		
@@ -1279,12 +1413,37 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			this.locked = locked;
 		}
 
+		
+		public boolean isEffector() {
+			return effector;
+		}
+
+		public void setEffector(boolean effector) {
+			this.effector = effector;
+		}
+
 		public boolean isConstrained() {
 			return constrained;
 		}
 
 		public void setConstrained(boolean constrained) {
 			this.constrained = constrained;
+		}
+
+		public FBKVector getHeadPoint() {
+			return headPoint;
+		}
+
+		public void setHeadPoint(FBKVector headPoint) {
+			this.headPoint = headPoint;
+		}
+
+		public FBKVector getTailPoint() {
+			return tailPoint;
+		}
+
+		public void setTailPoint(FBKVector tailPoint) {
+			this.tailPoint = tailPoint;
 		}
 
 		public FBKConstraintPivot getConstraintPivot() {
@@ -1411,9 +1570,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 
 		private FBKSegment getOuterType() {
 			return FBKSegment.this;
-		}
-		
-		
+		}	
 	}
 
 	private class PrivateDoubleProperty extends ReadOnlyDoublePropertyBase {
@@ -1486,7 +1643,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	
 	@Override
 	public int compareTo(FBKSegment other) {
-		return Integer.compare(this.getBoneId(), other.getBoneId());
+		return Integer.compare(this.getSegmentId(), other.getSegmentId());
 	}
 	
 	private void initNodeBindings() {

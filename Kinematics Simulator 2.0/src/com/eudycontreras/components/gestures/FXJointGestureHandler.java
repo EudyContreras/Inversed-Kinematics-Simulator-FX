@@ -77,5 +77,11 @@ public class FXJointGestureHandler extends FXGestureHandler {
 	protected void performScrolling(ScrollEvent event) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	protected void performMouseClicked(MouseEvent event) {
+		// TODO Auto-generated method stub
+		
 	}	
 }

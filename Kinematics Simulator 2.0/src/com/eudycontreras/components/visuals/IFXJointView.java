@@ -10,6 +10,8 @@ public interface IFXJointView {
 	    
 	 	public Shape getShape();
 	 	
+		public void setStroke(Color colorNormal);
+	 	
 	    public void setRadius(double radius);
 	    
 	    public void setOuterRadius(double outerRadius);
@@ -39,6 +41,8 @@ public interface IFXJointView {
 		public double getCenterX();
 
 		public double getCenterY();
+		
+		public void setSelected(boolean selected);
 
 		public Color getMainColor();
 
