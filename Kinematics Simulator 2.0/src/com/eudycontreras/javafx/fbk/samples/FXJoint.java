@@ -36,10 +36,12 @@ public class FXJoint implements FXSubject<FXJoint> {
 	private boolean applyingMinAngle = false;
 	private boolean applyingMaxAngle = false;
 	
+	private boolean showingJointConstraintAssist = false;
+	
 	private IFXJointView jointView;
 
 	private Color colorNormal = FXPaintResources.ACCENT_COLOR_LIGHT;
-	private Color colorLocked = Color.rgb(170, 170, 170, 1);
+	private Color colorLocked = Color.rgb(190, 190, 190, 1);
 	private Color colorConstrained = Color.rgb(245, 170, 0);
 
 	private ScaleTransition scale;
@@ -67,6 +69,7 @@ public class FXJoint implements FXSubject<FXJoint> {
 		this.jointView = jointView;
 		this.segment = current;
 		this.armature.unselectAll();
+		this.fxBone.setJoint(this);
 		this.setSelected(true);
 		this.setUpView();
 		this.setUpHelpers();
@@ -81,12 +84,37 @@ public class FXJoint implements FXSubject<FXJoint> {
 	}
 	
 	private void setUpHelpers(){
-		segment.getContent().add(0,assistMin.getShape());
-		segment.getContent().add(0,assistMax.getShape());
-		assistMin.getShape().setScaleX(0);
-		assistMin.getShape().setScaleY(0);
-		assistMax.getShape().setScaleX(0);
-		assistMax.getShape().setScaleY(0);
+		segment.getContent().add(0,assistMin.getNode());
+		segment.getContent().add(0,assistMax.getNode());
+		
+		assistMin.getNode().setScaleX(0);
+		assistMin.getNode().setScaleY(0);
+		
+		assistMax.getNode().setScaleX(0);
+		assistMax.getNode().setScaleY(0);
+		
+		assistMin.getNode().setOnMouseEntered(e -> {});
+		assistMin.getNode().setOnMousePressed(e -> {});
+		assistMin.getNode().setOnMouseReleased(e -> {});
+		assistMin.getNode().setOnMouseClicked(e -> {});
+		
+		assistMin.getNode().setOnMouseEntered(e -> {});
+		assistMin.getNode().setOnMousePressed(e -> {});
+		assistMin.getNode().setOnMouseReleased(e -> {});
+		assistMin.getNode().setOnMouseClicked(e -> {});
+		
+		assistMin.getShape().addEventFilter(MouseEvent.MOUSE_ENTERED, e ->{
+			assistMin.getNode().toFront();
+			
+			e.consume();
+		});
+		
+		assistMax.getShape().addEventFilter(MouseEvent.MOUSE_ENTERED, e ->{
+			assistMax.getNode().toFront();
+			
+			e.consume();
+		});
+		
 		assistMax.setFill(colorNormal);
 	}
 	
@@ -97,7 +125,7 @@ public class FXJoint implements FXSubject<FXJoint> {
 			jointView.setRadius(8);
 			jointView.setCenterRadius(6);
 			jointView.setMainColor(colorNormal);
-			jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.65));
+			jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.45));
 		}else{
 			segment.setLength(0);
 			jointView.setRadius(10);
@@ -123,22 +151,34 @@ public class FXJoint implements FXSubject<FXJoint> {
 			public void onSegmentConstrained(FBKSegment segment) {
 				if(segment.getKinematicsType() != FBKinematicsType.FORWARD){
 					jointView.setMainColor(colorConstrained);
+					if(isLeafJoint()){
+						jointView.setCenterColor(colorConstrained.deriveColor(1, 1, 1, 0.45));
+					}
 				}
 			}
 
 			@Override
 			public void onSegmentUnconstrained(FBKSegment segment) {
-				jointView.setMainColor(colorNormal);		
+				jointView.setMainColor(colorNormal);	
+				if(isLeafJoint()){
+					jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.45));
+				}
 			}
 
 			@Override
 			public void onSegmentLocked(FBKSegment segment) {
 				jointView.setMainColor(colorLocked);
+				if(isLeafJoint()){
+					jointView.setCenterColor(colorLocked.deriveColor(1, 1, 1, 0.45));
+				}
 			}
 
 			@Override
 			public void onSegmentUnlocked(FBKSegment segment) {
-				jointView.setMainColor(colorNormal);		
+				jointView.setMainColor(colorNormal);	
+				if(isLeafJoint()){
+					jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.45));
+				}
 			}
 
 			@Override
@@ -156,40 +196,46 @@ public class FXJoint implements FXSubject<FXJoint> {
 			@Override
 			public void onSegmentLengthChange(FBKSegment segment, double length) {
 				fxBone.computeLength(length, jointView.getOuterRadius());
-				assistMin.setRadius(length/3);
-				assistMax.setRadius(length/3);
+				
+				if(!segment.isAbsoluteAncestor() && !segment.isChildless()){
+					double assistLength = length * 0.25;
+					
+					if(assistLength > (segment.getParent().getLength() * 0.85)){
+						assistLength = (segment.getParent().getLength() * 0.85);
+					}
+					
+					assistMin.setRadius(assistLength);
+					assistMax.setRadius(assistLength);
+				}
+	
 			}
 
 			@Override
 			public void onSegmentStatusChange(FBKSegment segment, FBKSegmentStatus status) {
 				switch(status){
 				case ABSOLUTE_PARENT:
-//					assistMin.getShape().setVisible(false);
-//					assistMax.getShape().setVisible(false);
+					leafJoint = false;
 					break;
 				case ONLY_CHILD:
 					jointView.setRadius(10);
 					jointView.setCenterRadius(10);
 					jointView.setMainColor(colorNormal);
 					jointView.setCenterColor(Color.TRANSPARENT);
-//					assistMin.getShape().setVisible(true);
-//					assistMax.getShape().setVisible(true);
+					leafJoint = false;
 					break;
 				case SIBLING:
 					jointView.setRadius(10);
 					jointView.setCenterRadius(10);
 					jointView.setMainColor(colorNormal);
 					jointView.setCenterColor(Color.TRANSPARENT);
-//					assistMin.getShape().setVisible(true);
-//					assistMax.getShape().setVisible(true);
+					leafJoint = false;
 					break;
 				case TAIL:
 					jointView.setRadius(7);
 					jointView.setCenterRadius(4);			
 					jointView.setMainColor(colorNormal);
 					jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.65));
-//					assistMin.getShape().setVisible(false);
-//					assistMax.getShape().setVisible(false);
+					leafJoint = true;
 					break;
 				}
 			}
@@ -249,58 +295,6 @@ public class FXJoint implements FXSubject<FXJoint> {
 		}	
 	}
 	
-	public boolean isShowJoint() {
-		return this.jointView.getNode().isVisible();
-	}
-
-	public void setShowJoint(boolean showJoint) {
-		this.jointView.getNode().setVisible(showJoint);
-	}
-	
-	public void setOpacity(double opacity){
-		this.jointView.getNode().setOpacity(opacity);
-	}
-
-	public double getOpacity(){
-		return this.jointView.getNode().getOpacity();
-	}
-
-	public FXBone getFXBone() {
-		return fxBone;
-	}
-
-	public void setFXBone(FXBone fxBone) {
-		this.fxBone = fxBone;
-	}
-
-	public IFXJointView getJointView() {
-		return jointView;
-	}
-
-	public FBKSegment getSegment(){
-		return segment;
-	}
-	
-	public void setSegment(FBKSegment segment){
-		this.segment = segment;
-	}
-
-	public void setSelected(boolean selected) {
-		segment.setEffector();
-	}
-	
-	public boolean isLeafJoint(){
-		return leafJoint;
-	}
-	
-	public boolean isSelected() {
-		return selected;
-	}
-
-	public boolean isChainingReady() {
-		return chainingReady;
-	}
-
 	public FXJoint checkCollisions(){
 		for (FXJoint joint : armature.getJoints()) {
 
@@ -334,12 +328,16 @@ public class FXJoint implements FXSubject<FXJoint> {
 
 		jointView.getNode().setOnMousePressed(e -> {
 		
-			jointView.getNode().getScene().setCursor(Cursor.CLOSED_HAND);		
+			jointView.getNode().getScene().setCursor(Cursor.CLOSED_HAND);	
+			
+			applySelectEffeect();
 			
 			e.consume();
 		});
 
 		jointView.getNode().setOnMouseReleased(e -> {	
+			
+			applyUnselectEffect();
 			
 			if(resizingSegment){
 				finishResize();
@@ -397,16 +395,20 @@ public class FXJoint implements FXSubject<FXJoint> {
 						changeConstraintStatus();
 					}
 					else if(e.isShiftDown()){
-						showAngleConstraintAssist();
+						
 					}
 					else {
 						changeLockStatus();
 					}
 				}
 			}else{}
+			
+			e.consume();
 		});
 
 		jointView.getNode().setOnDragDetected(e -> {
+			applyUnselectEffect();
+			
 			if (e.isControlDown()) {
 	
 			}
@@ -428,7 +430,7 @@ public class FXJoint implements FXSubject<FXJoint> {
 			}
 		});
 		
-		assistMin.getShape().setOnMousePressed(e -> { e.consume();});
+		assistMin.getShape().setOnMousePressed(e -> {e.consume();});
 		
 		assistMin.getShape().setOnMouseReleased(e -> {e.consume();});
 		
@@ -457,36 +459,81 @@ public class FXJoint implements FXSubject<FXJoint> {
 		});
 	}
 
-	private void showAngleConstraintAssist() {
-		assistMin.updateAngle(0, segment.getAngle() - 180);
+	private void applyUnselectEffect() {
+		if(segment.isLocked()){
+			jointView.setStroke(colorLocked);
+		}else if(segment.isConstrained()){
+			jointView.setStroke(colorConstrained);
+		}else{
+			jointView.setStroke(colorNormal);
+		}
+	}
+
+	private void applySelectEffeect() {
+		jointView.setStroke(Color.WHITE);
+	}
+
+	public void showAngleConstraintAssist() {
+		if(segment.isAbsoluteAncestor() || segment.isChildless()){
+			return;
+		}
 		
 		ScaleTransition scaleMin = new ScaleTransition();
-		scaleMin.setInterpolator(Interpolator.EASE_IN);
-		scaleMin.setNode(assistMin.getShape());
-		scaleMin.setDuration(Duration.millis(300));
-		scaleMin.setFromX(0);
-		scaleMin.setFromY(0);
-		scaleMin.setToX(1);
-		scaleMin.setToY(1);
-		scaleMin.play();
-		scaleMin.setOnFinished(e -> {
-			
-		});
-		
-		assistMax.updateAngle(0, segment.getAngle() + 180);
+		scaleMin.setInterpolator(Interpolator.EASE_OUT);
+		scaleMin.setNode(assistMin.getNode());
+		scaleMin.setDuration(Duration.millis(200));
 		
 		ScaleTransition scaleMax = new ScaleTransition();
-		scaleMax.setInterpolator(Interpolator.EASE_IN);
-		scaleMax.setNode(assistMax.getShape());
-		scaleMax.setDuration(Duration.millis(300));
-		scaleMax.setFromX(0);
-		scaleMax.setFromY(0);
-		scaleMax.setToX(1);
-		scaleMax.setToY(1);
-		scaleMax.play();
-		scaleMax.setOnFinished(e -> {
+		scaleMax.setInterpolator(Interpolator.EASE_OUT);
+		scaleMax.setNode(assistMax.getNode());
+		scaleMax.setDuration(Duration.millis(200));
+		
+		if(showingJointConstraintAssist){
+			
+			scaleMin.setFromX(1);
+			scaleMin.setFromY(1);
+			scaleMin.setToX(0);
+			scaleMin.setToY(0);
+			scaleMin.setOnFinished(e -> {
+				
+			});
+			
+			scaleMax.setFromX(1);
+			scaleMax.setFromY(1);
+			scaleMax.setToX(0);
+			scaleMax.setToY(0);
+			scaleMax.setOnFinished(e -> {
 
-		});
+			});
+			
+			showingJointConstraintAssist = false;
+		}else{
+			
+			assistMin.updateAngle(0, segment.getAngle() - 180);
+
+			scaleMin.setFromX(0);
+			scaleMin.setFromY(0);
+			scaleMin.setToX(1);
+			scaleMin.setToY(1);
+			scaleMin.setOnFinished(e -> {
+				
+			});
+			
+			assistMax.updateAngle(0, segment.getAngle() + 180);
+			
+			scaleMax.setFromX(0);
+			scaleMax.setFromY(0);
+			scaleMax.setToX(1);
+			scaleMax.setToY(1);
+			scaleMax.setOnFinished(e -> {
+
+			});
+			
+			showingJointConstraintAssist = true;
+		}
+		
+		scaleMin.play();
+		scaleMax.play();
 	}
 
 	private void applyMinAngle() {
@@ -504,8 +551,8 @@ public class FXJoint implements FXSubject<FXJoint> {
 		
 		ScaleTransition scale = new ScaleTransition();
 		scale.setInterpolator(Interpolator.EASE_IN);
-		scale.setNode(assistMin.getShape());
-		scale.setDuration(Duration.millis(300));
+		scale.setNode(assistMin.getNode());
+		scale.setDuration(Duration.millis(200));
 		scale.setFromX(1);
 		scale.setFromY(1);
 		scale.setToX(0);
@@ -528,8 +575,8 @@ public class FXJoint implements FXSubject<FXJoint> {
 		
 		ScaleTransition scale = new ScaleTransition();
 		scale.setInterpolator(Interpolator.EASE_IN);
-		scale.setNode(assistMax.getShape());
-		scale.setDuration(Duration.millis(300));
+		scale.setNode(assistMax.getNode());
+		scale.setDuration(Duration.millis(200));
 		scale.setFromX(1);
 		scale.setFromY(1);
 		scale.setToX(0);
@@ -544,6 +591,9 @@ public class FXJoint implements FXSubject<FXJoint> {
 	}
 
 	private void changeLockStatus() {
+		if(isLeafJoint()){
+			return;
+		}
 		if (segment.isLocked()) {
 			segment.setLocked(false);
 		} else {
@@ -622,6 +672,7 @@ public class FXJoint implements FXSubject<FXJoint> {
 			}
 		} else if (segment.isChildless()) {
 			segment.setConstrained(false);
+			segment.setLocked(false, true);
 		} else {
 			segment.setConstrained(false, FBKConstraintPivot.TAIL);
 
@@ -636,6 +687,96 @@ public class FXJoint implements FXSubject<FXJoint> {
 		}
 	}
 	
+	public void remove() {
+		if(segment.hasAncestor()){
+			if(segment.hasChildren()){
+				segment.clearDescendants();		
+			}
+		}else{
+			if(segment.hasChildren()){
+				segment.clearDescendants();		
+			}else{
+				removeAnimate(()->{
+					segment.getContent().clear();
+					segment.getSkeleton().getSegmentsWritable().remove(segment);
+				});
+			}
+			
+			armature.setCurrentJoint(null);		
+		}
+	}
+	
+	public void removeAnimate(Runnable script){
+		ScaleTransition scale = new ScaleTransition();
+		scale.setInterpolator(Interpolator.EASE_IN);
+		scale.setNode(jointView.getNode());
+		scale.setDuration(Duration.millis(150));
+		scale.setFromX(1);
+		scale.setFromY(1);
+		scale.setToX(0);
+		scale.setToY(0);
+		scale.play();
+		scale.setOnFinished(e -> {
+			if(script != null){
+				script.run();
+			}
+		});
+	}
+
+
+	public boolean isShowJoint() {
+		return this.jointView.getNode().isVisible();
+	}
+
+	public void setShowJoint(boolean showJoint) {
+		this.jointView.getNode().setVisible(showJoint);
+	}
+	
+	public void setOpacity(double opacity){
+		this.jointView.getNode().setOpacity(opacity);
+	}
+
+	public double getOpacity(){
+		return this.jointView.getNode().getOpacity();
+	}
+
+	public FXBone getFXBone() {
+		return fxBone;
+	}
+
+	public void setFXBone(FXBone fxBone) {
+		this.fxBone = fxBone;
+		this.fxBone.setJoint(this);
+	}
+
+	public IFXJointView getJointView() {
+		return jointView;
+	}
+
+	public FBKSegment getSegment(){
+		return segment;
+	}
+	
+	public void setSegment(FBKSegment segment){
+		this.segment = segment;
+	}
+
+	public void setSelected(boolean selected) {
+		segment.setEffector();
+	}
+	
+	public boolean isLeafJoint(){
+		return leafJoint;
+	}
+	
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public boolean isChainingReady() {
+		return chainingReady;
+	}
+
 	private void setMouseCoordinates(double x, double y) {
 		this.point = new FBKVector(x, y);
 	}
@@ -724,21 +865,4 @@ public class FXJoint implements FXSubject<FXJoint> {
 	public ChangeListener<? super  Number> getMaxAngleChangeListener() {
 		return MaxAngleChangeListener;
 	}
-
-	public void remove() {
-		if(segment.hasAncestor()){
-			if(segment.hasChildren()){
-				segment.clearDescendants();		
-			}
-		}else{
-			if(segment.hasChildren()){
-				segment.clearDescendants();		
-			}else{
-				segment.getContent().clear();
-				segment.getSkeleton().getSegmentsWritable().remove(segment);
-			}
-			
-		}
-	}
-
 }

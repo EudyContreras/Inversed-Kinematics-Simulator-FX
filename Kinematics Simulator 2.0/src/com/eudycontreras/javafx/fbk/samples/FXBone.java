@@ -6,12 +6,15 @@ import com.eudycontreras.javafx.fbk.models.FBKSegment;
 import com.eudycontreras.javafx.fbk.models.FBKVector;
 import com.eudycontreras.javafx.fbk.models.FBKSegment.FBKinematicsType;
 
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
 public class FXBone{
 
 	private IFXBoneView boneView;
+	
+	private FXJoint fxJoint;
 	
 	private FBKSegment segment;
 	
@@ -30,8 +33,13 @@ public class FXBone{
 	
 	private void setUpView(){
 		boneView.setStrokeWidth(1);
-		boneView.setFill(boneColorNormal.deriveColor(1,1,1, 0.65));
+		boneView.setFill(boneColorNormal.deriveColor(1,1,1, 0.55));
 		boneView.setStroke(boneColorNormal);
+	}
+
+	
+	public void setJoint(FXJoint joint) {
+		this.fxJoint = joint;
 	}
 
 	public IFXBoneView getBoneView(){
@@ -48,11 +56,11 @@ public class FXBone{
 	
 	public void setSelected(boolean selected){
 		if(selected){
-			boneView.setFill(boneColorSelected.deriveColor(1,1,1,0.5));
+			boneView.setFill(boneColorSelected.deriveColor(1,1,1,0.55));
 			boneView.setStroke(boneColorSelected);
 			
 		}else{
-			boneView.setFill(boneColorNormal.deriveColor(1,1,1,0.5));
+			boneView.setFill(boneColorNormal.deriveColor(1,1,1,0.55));
 			boneView.setStroke(boneColorNormal);		
 		}
 	}
@@ -76,6 +84,29 @@ public class FXBone{
 			performSegmentMove(e);
 			
 			e.consume();
+		});
+		
+		boneView.getShape().setOnMouseClicked(e -> {
+			
+			if (e.getButton().equals(MouseButton.PRIMARY)) {
+				if (e.getClickCount() == 2) {
+					if(e.isAltDown()){
+
+					}
+					else if(e.isControlDown()){
+
+					}
+					else if(e.isShiftDown()){
+						
+					}
+					else {
+						fxJoint.showAngleConstraintAssist();
+					}
+				}
+			}else{}
+			
+			e.consume();
+		
 		});
 	}
 

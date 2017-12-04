@@ -1,13 +1,20 @@
 package com.eudycontreras.components.assist;
 
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 
 public class FXRotateAssist {
 
 	private Arc angleConstraintAssist = new Arc();
+	
+	private Circle padder = new Circle();
+	
+	private Group wrapper = new Group();
 
 	public FXRotateAssist(double angleStart, double angleLength){
 		createAssistant(angleStart, angleLength);
@@ -24,6 +31,16 @@ public class FXRotateAssist {
 		angleConstraintAssist.setStartAngle(angleStart);
 		angleConstraintAssist.setLength(angleLength);
 		angleConstraintAssist.setType(ArcType.ROUND);
+		
+		padder.setRadius(60);
+		padder.setRadius(60);
+		padder.setFill(Color.TRANSPARENT);
+		
+		wrapper.getChildren().addAll(padder,angleConstraintAssist);
+	}
+	
+	public Node getNode(){
+		return wrapper;
 	}
 	
 	public Shape getShape(){
@@ -33,6 +50,8 @@ public class FXRotateAssist {
 	public void setRadius(double radius) {
 		angleConstraintAssist.setRadiusX(radius);
 		angleConstraintAssist.setRadiusY(radius);
+		
+		padder.setRadius(radius);
 	}
 
 	public void setFill(Color color) {
@@ -44,17 +63,17 @@ public class FXRotateAssist {
 		angleConstraintAssist.setStroke(color);
 	}
 
-	public void setX(double x, double y) {
-		angleConstraintAssist.setCenterX(x);
+	public void setX(double x) {
+		wrapper.setTranslateX(x);
 	}
 	
-	public void setY(double x, double y) {
-		angleConstraintAssist.setCenterY(y);
+	public void setY(double y) {
+		wrapper.setTranslateY(y);
 	}
 	
 	public void setPosition(double x, double y) {
-		angleConstraintAssist.setCenterX(x);
-		angleConstraintAssist.setCenterY(y);
+		wrapper.setTranslateX(x);
+		wrapper.setTranslateY(y);
 	}
 
 	public void updateAngle(double start, double angle) {

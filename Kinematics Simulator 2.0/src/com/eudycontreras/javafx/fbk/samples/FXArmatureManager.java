@@ -224,6 +224,39 @@ public class FXArmatureManager {
 		}
 	}
 	
+	private void addChild(FXJoint parentJoint, FBKVector point, final FBKSegment child, final double length) {
+		parentJoint.getSegment().addChild(child);
+		child.moveHead(parentJoint.getSegment().getCurrentTail());
+		child.setLength(length);
+		child.moveTail(point);
+		
+		final FBKSegment descendant = new FBKSegment(point, 0, 0, FBKSegment.MIN_ANGLE, FBKSegment.MAX_ANGLE);
+		
+		child.addChild(descendant);
+		
+		addGraphicalContent(skeleton, child, getJoint(10), getBone(child), false);
+
+		setCurrentJoint(addGraphicalContent(skeleton, descendant, getJoint(10), getBone(descendant)));
+		
+		descendant.setEffector();
+	}
+
+	private void addRootChild(FXJoint parentJoint, FBKVector point, final FBKSegment child, final double length) {
+		parentJoint.getSegment().addChild(child);
+		child.moveHead(parentJoint.getSegment().getCurrentTail());
+		child.setLength(length);
+		child.moveTail(point);
+		
+		final FBKSegment descendant = new FBKSegment(point, 0, 0, FBKSegment.MIN_ANGLE, FBKSegment.MAX_ANGLE);
+		
+		child.addChild(descendant);
+		
+		addGraphicalContent(skeleton, child, getJoint(10), getBone(child), false);
+
+		setCurrentJoint(addGraphicalContent(skeleton, descendant, getJoint(10), getBone(descendant)));
+		
+		descendant.setEffector();
+	}
 	private FXJoint addGraphicalContent(FBKSegmentChain skeleton, FBKSegment segment, IFXJointView jointView, IFXBoneView boneView) {
 		return addGraphicalContent(skeleton, segment, jointView, boneView, true);
 	}
