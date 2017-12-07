@@ -1,1 +1,12 @@
 Add angle of rotation
+
+
+Joint Adjustment Panel: 
+
+ ● Children inherit constraint: Angle, max Angle, min angle, etc;
+ 
+ ● Adjust min angle and max angle with rang slider. 
+ 
+ ● Lock and cosntraint check
+ 
+ 

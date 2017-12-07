@@ -1,15 +1,25 @@
 package com.eudycontreras.components.handlers;
 
-import com.eudycontreras.components.models.Bone;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
+import com.eudycontreras.components.helpers.FXRotateAssist;
 import com.eudycontreras.components.visuals.IFXJointView;
-import com.eudycontreras.editor.application.FXEditor;
-import com.eudycontreras.models.Point;
+import com.eudycontreras.editor.application.FXArmatureManager;
+import com.eudycontreras.editor.application.FXPaintResources;
+import com.eudycontreras.javafx.fbk.listeners.FBKSegmentEventListener;
+import com.eudycontreras.javafx.fbk.models.FBKSegment;
+import com.eudycontreras.javafx.fbk.models.FBKSegment.FBKConstraintPivot;
+import com.eudycontreras.javafx.fbk.models.FBKSegment.FBKinematicsType;
+import com.eudycontreras.javafx.fbk.models.FBKVector;
 import com.eudycontreras.observers.FXObserver;
 import com.eudycontreras.observers.FXSubject;
+
 import javafx.animation.FillTransition;
-import javafx.animation.ParallelTransition;
+import javafx.animation.Interpolator;
 import javafx.animation.ScaleTransition;
-import javafx.animation.StrokeTransition;
+import javafx.animation.Transition;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -19,197 +29,300 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class FXJoint implements FXSubject<FXJoint> {
 
-	private int jointId;
-
-	private boolean fixed = false;
-	private boolean locked = false;
+	private boolean leafJoint = false;
 	private boolean selected = false;
-	private boolean resizing = false;
-	private boolean readyMerge = false;
-	private boolean isMaster = false;
+	private boolean chainingReady = false;
+	private boolean resizingSegment = false;
+	private boolean applyingMinAngle = false;
+	private boolean applyingMaxAngle = false;
+	
+	private boolean showingJointConstraintAssist = false;
+	
+	private IFXJointView jointView;
 
-	private IFXJointView pivot;
+	private Color colorNormal = FXPaintResources.ACCENT_COLOR_LIGHT;
+	private Color colorLocked = Color.rgb(190, 190, 190, 1);
+	private Color colorConstrained = Color.rgb(245, 170, 0);
 
-	private Color colorNormal = Color.rgb(0, 150, 255);
-	private Color colorSelected = Color.rgb(255, 190, 0);
-	private Color colorLocked = Color.WHITE;
-
-	private Point point;
-
-	private FXBone parent;
-	private FXEditor editor;
-
-	private Bone currentBone;
-	private Bone parentBone;
-
+	private ScaleTransition scale;
+	private FillTransition stroke;
+	
+	private FXBone fxBone;
+	private FXArmatureManager armature;
+	
+	private FBKVector point;
+	
+	private FBKSegment segment;
+	
+	private FXRotateAssist assistMin = new FXRotateAssist(0,60);
+	private FXRotateAssist assistMax = new FXRotateAssist(0,60);
+	
 	private List<FXObserver<FXJoint>> observers = new ArrayList<FXObserver<FXJoint>>();
-
-	public FXJoint(FXEditor editor, IFXJointView jointView, Bone current, Bone parent, int jointId) {
-		this.editor = editor;
-		this.jointId = jointId;
-		this.pivot = jointView;
-		this.currentBone = current;
-		this.parentBone = parent;
-		this.colorNormal = jointView.getMainColor();
-		//this.editor.unselectAll();
+	
+	public FXJoint(FXArmatureManager editor, FBKSegment current,IFXJointView jointView) {
+		this(editor, current, null, jointView);
+	}
+	
+	public FXJoint(FXArmatureManager editor, FBKSegment current, FXBone bone, IFXJointView jointView) {
+		this.fxBone = bone;
+		this.armature = editor;
+		this.jointView = jointView;
+		this.segment = current;
+		this.armature.unselectAll();
+		this.fxBone.setJoint(this);
 		this.setSelected(true);
-		addEventHandling();
+		this.setUpView();
+		this.setUpHelpers();
+		this.addEventHandling();
+		this.addListener();
 	}
-
-	public IFXJointView getJoint() {
-		return pivot;
+	
+	private void setUpView(){
+		jointView.setCenterRadius(!segment.hasAncestor() ? armature.getJointRadius() : armature.getJointRadius()*0.6);
+		jointView.setCenterColor(Color.TRANSPARENT);
+		jointView.setMainColor(colorNormal);
 	}
-
-	public int getJointId() {
-		return jointId;
+	
+	private void setUpHelpers(){
+		segment.getContent().add(0,assistMin.getNode());
+		segment.getContent().add(0,assistMax.getNode());
+		
+		assistMin.getNode().setScaleX(0);
+		assistMin.getNode().setScaleY(0);
+		
+		assistMax.getNode().setScaleX(0);
+		assistMax.getNode().setScaleY(0);
+		
+		assistMax.setFill(colorNormal);
 	}
-
-	public Bone getCurrentBone(){
-		return currentBone;
+	
+	public void setLeafJoint(boolean leafJoint){
+		this.leafJoint = leafJoint;		
+		if(leafJoint){
+			segment.setLength(0);
+			jointView.setRadius(armature.getJointRadius()*0.7);
+			jointView.setCenterRadius(armature.getJointRadius()*0.4);
+			jointView.setMainColor(colorNormal);
+			jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.45));
+		}else{
+			segment.setLength(0);
+			jointView.setRadius(armature.getJointRadius());
+			jointView.setCenterRadius(armature.getJointRadius());
+			jointView.setMainColor(colorNormal);
+			jointView.setCenterColor(Color.TRANSPARENT);
+		}		
 	}
-
-	public void setCurrentBone(Bone bone){
-		this.currentBone = bone;
-		this.parentBone = bone.getParent();
-	}
-
-	public void setLocked(double status){
-
-	}
-
-
-	public void setLeafJoint(double status){
-
-	}
-
-	public void setSelected(boolean selected) {
-		if(!selected && readyMerge)return;
-
-		this.selected = selected;
-
-		ScaleTransition scale = new ScaleTransition(Duration.millis(250), pivot.getNode());
-		FillTransition fill = new FillTransition(Duration.millis(250),pivot.getShape());
-		StrokeTransition stroke = new StrokeTransition(Duration.millis(250),pivot.getShape());
-		ParallelTransition parallel = new ParallelTransition(pivot.getNode(), fill, stroke, scale);
-
-		if (selected) {
-
-			if(!locked){
-				scale.setFromX(1);
-				scale.setFromY(1);
-				scale.setToX(1.3);
-				scale.setToY(1.3);
-				fill.setFromValue(colorNormal.deriveColor(1, 1, 1, 0.6));
-				fill.setToValue(colorSelected.deriveColor(1, 1, 1, 0.6));
-				stroke.setFromValue(colorNormal);
-				stroke.setToValue(colorSelected);
-			} else {
-				fill.setFromValue(((Color) pivot.getShape().getFill()));
-				fill.setToValue(Color.TRANSPARENT);
-				stroke.setFromValue(((Color) pivot.getShape().getStroke()));
-				stroke.setToValue(colorSelected);
+	
+	public void addListener(){
+		FBKSegmentEventListener listener = new FBKSegmentEventListener(){
+		
+			@Override
+			public void onKinematicsTypeChanged(FBKSegment segment, FBKinematicsType type) {
+				if(type == FBKinematicsType.FORWARD){
+					
+				}else{
+					
+				}		
 			}
 
-			//editor.setJointAdjust(this);
-		} else {
-			if(!locked){
-				scale.setFromX(1.3);
-				scale.setFromY(1.3);
-				scale.setToX(1);
-				scale.setToY(1);
-				fill.setToValue(colorNormal.deriveColor(1, 1, 1, 0.6));
-				fill.setFromValue(colorSelected.deriveColor(1, 1, 1, 0.6));
-				stroke.setToValue(colorNormal);
-				stroke.setFromValue(colorSelected);
-
-			}else{
-				fill.setFromValue(((Color) pivot.getShape().getFill()));
-				fill.setToValue(Color.TRANSPARENT);
-
-				stroke.setFromValue(((Color) pivot.getShape().getStroke()));
-				stroke.setToValue(Color.WHITE);
+			@Override
+			public void onSegmentConstrained(FBKSegment segment) {
+				if(FBKSegment.siblingsMeetCondition(segment, s-> s.getKinematicsType() != FBKinematicsType.FORWARD)){
+					if(!resizingSegment){
+						jointView.setMainColor(colorConstrained);
+						if(isLeafJoint()){
+							jointView.setCenterColor(colorConstrained.deriveColor(1, 1, 1, 0.45));
+						}
+					}else{
+						jointView.setStroke(colorNormal);
+					}
+				}else{
+					jointView.setMainColor(colorNormal);
+				}
 			}
+
+			@Override
+			public void onSegmentUnconstrained(FBKSegment segment) {
+				if(segment.isLocked()){
+					jointView.setMainColor(colorLocked);	
+				}else{
+					jointView.setMainColor(colorNormal);	
+				}
+				if(isLeafJoint()){
+					jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.45));
+				}
+			}
+
+			@Override
+			public void onSegmentLocked(FBKSegment segment) {
+				jointView.setMainColor(colorLocked);
+				if(isLeafJoint()){
+					jointView.setCenterColor(colorLocked.deriveColor(1, 1, 1, 0.45));
+				}
+			}
+
+			@Override
+			public void onSegmentUnlocked(FBKSegment segment) {
+				jointView.setMainColor(colorNormal);	
+				if(isLeafJoint()){
+					jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.45));
+				}
+			}
+
+			@Override
+			public void onEffectorStatusChanged(FBKSegment segment, boolean status) {
+				if(status){
+						armature.setCurrentJoint(FXJoint.this);
+						jointView.setSelected(status);
+				}else{
+					if(segment.getLastState().isEffector()){
+						jointView.setSelected(status);
+					}
+				}
+			}
+
+			@Override
+			public void onSegmentLengthChange(FBKSegment segment, double length) {
+				fxBone.computeLength(length, jointView.getOuterRadius());
+				
+				if(!segment.isAbsoluteAncestor() && !segment.isChildless()){
+					double assistLength = length * 0.25;
+					
+					if(assistLength > (segment.getParent().getLength() * 0.80)){
+						assistLength = (segment.getParent().getLength() * 0.80);
+					}
+					
+					assistMin.setRadius(assistLength);
+					assistMax.setRadius(assistLength);
+				}
+	
+			}
+
+			@Override
+			public void onSegmentStatusChange(FBKSegment segment, FBKSegmentStatus status) {
+				switch(status){
+				case ABSOLUTE_PARENT:
+					leafJoint = false;
+					break;
+				case ONLY_CHILD:
+					jointView.setRadius(armature.getJointRadius());
+					jointView.setCenterRadius(armature.getJointRadius());
+					jointView.setMainColor(colorNormal);
+					jointView.setCenterColor(Color.TRANSPARENT);
+					leafJoint = false;
+					break;
+				case SIBLING:
+					jointView.setRadius(armature.getJointRadius());
+					jointView.setCenterRadius(armature.getJointRadius());
+					jointView.setMainColor(colorNormal);
+					jointView.setCenterColor(Color.TRANSPARENT);
+					leafJoint = false;
+					break;
+				case TAIL:
+					jointView.setRadius(armature.getJointRadius()*0.7);
+					jointView.setCenterRadius(armature.getJointRadius()*0.4);	
+					jointView.setMainColor(colorNormal);
+					jointView.setCenterColor(colorNormal.deriveColor(1, 1, 1, 0.65));
+					leafJoint = true;
+					break;
+				}
+			}
+
+			@Override
+			public void onPositionUpdate(FBKSegment segment, FBKVector headPoint, FBKVector tailPoint, double angle, double rotation, double length) {
+
+			}
+
+			@Override
+			public void onAngleChanged(FBKSegment segment, double angle) {
+				assistMin.updateAngle(0, angle - 180);
+				assistMax.updateAngle(0, angle + 180);
+			}
+
+			@Override
+			public void onSegmentChildAdded(FBKSegment segment, FBKSegment child) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onSegmentChildRemoved(FBKSegment segment, FBKSegment child) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+		
+		segment.setEventListener(listener);
+	}
+	
+	public void changeChainingStatus() {			
+		if(scale != null){
+			scale.stop();
+			stroke.stop();
 		}
-		parallel.play();
-	}
-
-	public boolean isSelected() {
-		return selected;
-	}
-
-	public boolean isMergeReady() {
-		return readyMerge;
-	}
-
-	public void secureChildren(boolean state){
-		locked = state;
-
-		FillTransition fill = new FillTransition(Duration.millis(250), pivot.getShape());
-		StrokeTransition stroke = new StrokeTransition(Duration.millis(250), pivot.getShape());
-		ScaleTransition scale = new ScaleTransition(Duration.millis(250), pivot.getNode());
-		ParallelTransition parallel = new ParallelTransition(pivot.getNode(),scale, fill, stroke);
-
-		if(locked){
-			fill.setFromValue(((Color) pivot.getShape().getFill()));
-			fill.setToValue(Color.TRANSPARENT);
-
-			stroke.setFromValue(((Color) pivot.getShape().getStroke()));
-			stroke.setToValue(Color.WHITE);
-
-			scale.setFromX(pivot.getNode().getScaleX());
-			scale.setFromY(pivot.getNode().getScaleY());
-
+		
+		scale = new ScaleTransition(Duration.millis(450));
+		stroke = new FillTransition(Duration.millis(450));
+		
+		if(!chainingReady){
+			chainingReady = true;
+			stroke.setShape(jointView.getShape());
+			stroke.setFromValue(((Color)jointView.getShape().getFill()));
+			stroke.setToValue(Color.TRANSPARENT);
+			stroke.setCycleCount(Transition.INDEFINITE);
+			stroke.setAutoReverse(true);
+			stroke.play();
+			
+			scale.setNode(jointView.getNode());
+			scale.setCycleCount(Transition.INDEFINITE);
+			scale.setAutoReverse(true);
+			scale.setFromX(1);
+			scale.setFromY(1);
+			scale.setToX(1.7);
+			scale.setToY(1.7);
+			scale.play();
+		}else{
+			chainingReady = false;	
+			stroke.setShape(jointView.getShape());
+			stroke.setFromValue(((Color)jointView.getShape().getFill()));
+			stroke.setToValue(colorNormal.deriveColor(1, 1, 1, 0.6));
+			stroke.play();
+			
+			scale.setNode(jointView.getNode());
+			scale.setFromX(1.7);
+			scale.setFromY(1.7);
 			scale.setToX(1);
 			scale.setToY(1);
-
-			currentBone.setFixed(true, true);
-
-			fixed = true;
-
-		}else{
-			fill.setFromValue(((Color) pivot.getShape().getFill()));
-			fill.setToValue(colorNormal.deriveColor(1, 1, 1, 0.5));
-
-			stroke.setFromValue(((Color) pivot.getShape().getStroke()));
-			stroke.setToValue(colorNormal);
-
-			currentBone.setFixed(false, true);
-
-			fixed = false;
-		}
-
-		parallel.play();
+			scale.play();
+		}	
 	}
+	
+	public FXJoint checkCollisions(){
+		for (FXJoint joint : armature.getJoints()) {
 
-	public void unponCollision(Runnable action) {
+			if (joint.getSegment().getSegmentId() == getSegment().getSegmentId()){
+				continue;
+			}
 
-//		for (FXJoint joint : editor.getJoints()) {
-//
-//			if (joint.getJointId() == jointId)
-//				continue;
-//
-//			if (checkBounds(joint)) {
-//
-//				if (action != null) {
-//					action.run();
-//				}
-//			}
-//		}
+			if (checkBounds(joint)) {
+				System.out.println("Checking bounds 1");
+				return joint;
+			}
+		}
+		
+		return null;
 	}
 
 	public boolean checkBounds(FXJoint joint) {
+		
+		
+		Bounds bounds1 = jointView.getNode().localToScene(jointView.getNode().getBoundsInLocal());
 
-		Bounds bounds1 = pivot.getNode().localToScene(pivot.getNode().getBoundsInLocal());
-
-		Bounds bounds2 = joint.getJoint().getNode().localToScene(joint.getJoint().getNode().getBoundsInLocal());
+		Bounds bounds2 = joint.getJointView().getNode().localToScene(joint.getJointView().getNode().getBoundsInLocal());
 
 		if (bounds2.contains(bounds1)) {
-
 			return true;
 		}
 		return false;
@@ -218,229 +331,534 @@ public class FXJoint implements FXSubject<FXJoint> {
 
 	private void addEventHandling() {
 
-		pivot.getNode().setOnMousePressed(e -> {
+		jointView.getNode().setOnMousePressed(e -> {
+		
+			jointView.getNode().getScene().setCursor(Cursor.CLOSED_HAND);	
+			
+			applySelectEffeect();
+			
+			e.consume();
+		});
 
-			if(!e.isAltDown()){
-				if(!selected){
-
-					//editor.unselectRest(getJointId());
-
-					setSelected(true);
+		jointView.getNode().setOnMouseReleased(e -> {	
+			
+			applyUnselectEffect();
+			
+			if(resizingSegment){
+				finishResize();
+			}else{
+				segment.setEffector();
+				
+				FXJoint collision = checkCollisions();
+				
+				if(collision != null){
+					
+					if(collision.isChainingReady()){
+						
+						performChaining(collision);
+					}
 				}
 			}
-
-			pivot.getNode().getScene().setCursor(Cursor.CLOSED_HAND);
-
-			setMouse(e.getSceneX(), e.getSceneY());
-
-			e.consume();
-		});
-
-		pivot.getNode().setOnMouseReleased(e -> {
-
-			if(resizing){
-				finishResize();
-			}
-
-			pivot.getNode().getScene().setCursor(Cursor.OPEN_HAND);
-
-			setMouse(e.getSceneX(), e.getSceneY());
+			
+			jointView.getNode().getScene().setCursor(Cursor.OPEN_HAND);	
+			
+			setMouseCoordinates(e.getSceneX(), e.getSceneY());			
 
 			e.consume();
 
 		});
 
-		pivot.getNode().setOnMouseDragged(e -> {
+		jointView.getNode().setOnMouseDragged(e -> {
 
-			pivot.getNode().getScene().setCursor(Cursor.MOVE);
-
+			jointView.getNode().getScene().setCursor(Cursor.MOVE);
+			
 			if (e.isControlDown()) {
-
 				performResize(e);
 
-				resizing = true;
 			}
 			else if(e.isAltDown()){
-
+				
 
 			}
 			else {
-
-				moveAttachedBones(e);
+				
+				if(resizingSegment){
+					finishResize();
+				}
+				moveSegment(e);
 			}
-
+			
 			e.consume();
 		});
 
-		pivot.getNode().setOnMouseClicked(e -> {
-
+		jointView.getNode().setOnMouseClicked(e -> {
+			
 			if (e.getButton().equals(MouseButton.PRIMARY)) {
 				if (e.getClickCount() == 2) {
 					if(e.isAltDown()){
-						if (!locked){
-							secureChildren(true);
-						}else{
-							secureChildren(false);
-						}
+						changeChainingStatus();
 					}
 					else if(e.isControlDown()){
-//						if(!editor.IsJointDialogOpen()){
-//							editor.openJointDialog(this);
-//							editor.setJointAdjust(this);
-//							setSelected(true);
-//						}
+						changeConstraintStatus();
+					}
+					else if(e.isShiftDown()){
+						
+					}
+					else {
+						changeLockStatus();
 					}
 				}
-			}else{
-
-			}
+			}else{}
+			
+			e.consume();
 		});
 
-		pivot.getNode().setOnDragDetected(e -> {
+		jointView.getNode().setOnDragDetected(e -> {
+			applyUnselectEffect();
+			
 			if (e.isControlDown()) {
-
+	
 			}
 		});
 
-		pivot.getNode().setOnMouseEntered(e -> {
+		jointView.getNode().setOnMouseEntered(e -> {
 
 			if (!e.isPrimaryButtonDown()) {
 
-				pivot.getNode().getScene().setCursor(Cursor.HAND);
+				jointView.getNode().getScene().setCursor(Cursor.HAND);
 			}
 		});
 
-		pivot.getNode().setOnMouseExited(e -> {
+		jointView.getNode().setOnMouseExited(e -> {
 
 			if (!e.isPrimaryButtonDown()) {
 
-				pivot.getNode().getScene().setCursor(Cursor.DEFAULT);
+				jointView.getNode().getScene().setCursor(Cursor.DEFAULT);
 			}
+		});
+
+		assistMin.getShape().setOnMousePressed(e -> {e.consume();});
+		assistMax.getShape().setOnMousePressed(e -> {e.consume();});
+		
+		assistMin.getShape().setOnMouseReleased(e -> {e.consume();});
+		assistMax.getShape().setOnMouseReleased(e -> {e.consume();});
+		
+		assistMin.getShape().setOnMouseClicked(e -> {		
+			if (e.getButton().equals(MouseButton.PRIMARY)) {
+				if (e.getClickCount() == 2) {				
+					applyMinAngle();
+				}
+			}else{}
+			
+			e.consume();
+		});
+		
+		assistMax.getShape().setOnMouseClicked(e -> {		
+			if (e.getButton().equals(MouseButton.PRIMARY)) {
+				if (e.getClickCount() == 2) {				
+					applyMaxAngle();
+				}
+			}else{}
+	
+			e.consume();
 		});
 	}
 
-	private void moveAttachedBones(MouseEvent e) {
-		if(parentBone != null){
-
-			Point2D point = parentBone.getSkeleton().sceneToLocal(e.getSceneX(), e.getSceneY());
-
-			if(!currentBone.isFixed()){
-				parentBone.moveEndpoint(point);
-			}
+	private void applyUnselectEffect() {
+		if(segment.isLocked()){
+			jointView.setStroke(colorLocked);
+		}else if(segment.isConstrained()){
+			jointView.setStroke(colorConstrained);
 		}else{
-			Point2D point = currentBone.getSkeleton().sceneToLocal(e.getSceneX(), e.getSceneY());
-
-			currentBone.moveStartPoint(point);
-
-			//System.out.println("Null!!!!!!!!!!");
-			//unfixChildren(currentBone);
+			jointView.setStroke(colorNormal);
 		}
-
 	}
 
-
-	private void unfixChildren(Bone bone){
-//		for(FXJoint joint : editor.getJoints()){
-//
-//			if(joint.getCurrentBone().hasAncestor(bone)){
-//
-//				if(joint.isFixed()){
-//					joint.secureChildren(false);
-//				}
-//			}
-//		}
+	private void applySelectEffeect() {
+		jointView.setStroke(Color.WHITE);
 	}
+
+	public void showAngleConstraintAssist() {
+		if(segment.isAbsoluteAncestor() || segment.isChildless()){
+			return;
+		}
+		
+		double assistLength = segment.getLength() * 0.25;
+		
+		if(assistLength > (segment.getParent().getLength() * 0.85)){
+			assistLength = (segment.getParent().getLength() * 0.85);
+		}
+		
+		assistMin.setRadius(assistLength);
+		assistMax.setRadius(assistLength);
+		
+		ScaleTransition scaleMin = new ScaleTransition();
+		scaleMin.setInterpolator(Interpolator.EASE_OUT);
+		scaleMin.setNode(assistMin.getNode());
+		scaleMin.setDuration(Duration.millis(200));
+		
+		ScaleTransition scaleMax = new ScaleTransition();
+		scaleMax.setInterpolator(Interpolator.EASE_OUT);
+		scaleMax.setNode(assistMax.getNode());
+		scaleMax.setDuration(Duration.millis(200));
+		
+		if(!applyingMinAngle && !applyingMaxAngle){
+			showingJointConstraintAssist = false;
+		}
+		
+		if(showingJointConstraintAssist){
+			
+			scaleMin.setFromX(assistMin.getNode().getScaleX());
+			scaleMin.setFromY(assistMin.getNode().getScaleY());
+			scaleMin.setToX(0);
+			scaleMin.setToY(0);
+			scaleMin.setOnFinished(e -> {
+				
+			});
+			
+			scaleMax.setFromX(assistMax.getNode().getScaleX());
+			scaleMax.setFromY(assistMax.getNode().getScaleY());
+			scaleMax.setToX(0);
+			scaleMax.setToY(0);
+			scaleMax.setOnFinished(e -> {
+
+			});
+			
+			showingJointConstraintAssist = false;
+			
+			applyingMaxAngle = false;
+
+			applyingMinAngle = false;
+		}else{
+			
+			assistMin.updateAngle(0, segment.getAngle() - 180);
+
+			scaleMin.setFromX(assistMin.getNode().getScaleX());
+			scaleMin.setFromY(assistMin.getNode().getScaleY());
+			scaleMin.setToX(1);
+			scaleMin.setToY(1);
+			scaleMin.setOnFinished(e -> {
+				
+			});
+			
+			assistMax.updateAngle(0, segment.getAngle() + 180);
+			
+			scaleMax.setFromX(assistMax.getNode().getScaleX());
+			scaleMax.setFromY(assistMax.getNode().getScaleY());
+			scaleMax.setToX(1);
+			scaleMax.setToY(1);
+			scaleMax.setOnFinished(e -> {
+
+			});
+			
+			showingJointConstraintAssist = true;
+			
+			applyingMaxAngle = true;
+
+			applyingMinAngle = true;
+		}
+		
+		scaleMin.play();
+		scaleMax.play();
+	}
+
+	private void applyMinAngle() {
+	
+		segment.setMinAngle(segment.getAngle());
+
+		ScaleTransition scale = new ScaleTransition();
+		scale.setInterpolator(Interpolator.EASE_IN);
+		scale.setNode(assistMin.getNode());
+		scale.setDuration(Duration.millis(200));
+		scale.setFromX(1);
+		scale.setFromY(1);
+		scale.setToX(0);
+		scale.setToY(0);
+		scale.play();
+		
+		applyingMinAngle = false;
+	}
+
+	private void applyMaxAngle() {
+		
+		segment.setMaxAngle(segment.getAngle());
+
+		ScaleTransition scale = new ScaleTransition();
+		scale.setInterpolator(Interpolator.EASE_IN);
+		scale.setNode(assistMax.getNode());
+		scale.setDuration(Duration.millis(200));
+		scale.setFromX(1);
+		scale.setFromY(1);
+		scale.setToX(0);
+		scale.setToY(0);
+		scale.play();
+		
+		applyingMaxAngle = false;
+	}
+
+	private void performChaining(FXJoint collision) {
+		System.out.println("MERGING");
+		
+		armature.appendChain(collision, this);
+	}
+
+	private void changeLockStatus() {
+		if(isLeafJoint() || segment.isAbsoluteAncestor()){
+			return;
+		}
+		if (segment.isLocked()) {
+			segment.setLocked(false);
+		} else {
+			segment.setLocked(true);
+		}
+	}
+
+	private void changeConstraintStatus() {
+		if (segment.isConstrained()) {
+			segment.setConstrained(false, FBKConstraintPivot.NONE);						
+		} else {
+			segment.setConstrained(true, FBKConstraintPivot.HEAD);
+		}
+	}
+	
+	private void moveSegment(MouseEvent e) {
+		
+		Point2D point = segment.getSkeleton().sceneToLocal(e.getSceneX(), e.getSceneY());
+		
+		segment.moveHead(FBKVector.toVector(point));					
+	}
+	
 
 	private void performResize(MouseEvent e) {
-		if(parentBone == null) return;
+	
+		Point2D point = segment.getSkeleton().sceneToLocal(e.getSceneX(), e.getSceneY());
+	
+		if(segment.hasAncestor()){		
+			resizeChildSegment(point);
+		}else{					
+			if(segment.isAbsoluteAncestor()){
+				resizeAbsoluteParent(point);
+			}else{
+				resizeParentSegment(point);
+			}
+		}
+		
+	}
 
-		Point2D point = parentBone.getSkeleton().sceneToLocal(e.getSceneX(), e.getSceneY());
+	private void resizeAbsoluteParent(Point2D point) {
 
-		Point2D start = parentBone.getSkeleton().getParent().localToScene(parentBone.getStartPoint());
-
-		//double angle = editor.getAngle(start, point);
+		Point2D start = segment.getCurrentTail().toPoint2D();
 
 		double distance = start.distance(point);
+		
+		if(!resizingSegment){		
+			resizingSegment = true;
+			
+			segment.setConstrained(true, FBKConstraintPivot.TAIL);
 
-	//	parentBone.resize(angle, distance, point);
-
-		if(parent != null){
-			parent.computeLength(distance,pivot.getOuterRadius());
+			segment.setChildrenAttached(false);
 		}
+		
+		segment.resizeFromHead(distance, FBKVector.toVector(point));
+	}
+	
 
-		resizing = true;
+	private void resizeParentSegment(Point2D point) {
+		Point2D start = segment.getCurrentTail().toPoint2D();
+
+		double distance = start.distance(point);
+		
+		if(!resizingSegment){		
+		
+			resizingSegment = true;
+			
+			segment.setConstrained(true, FBKConstraintPivot.TAIL);
+			
+			for(FBKSegment child : segment.getChildren()){
+				child.setLocked(true, true);
+			}
+		}
+		
+		segment.resizeFromHead(distance, FBKVector.toVector(point));
+	}
+
+
+	private void resizeChildSegment(Point2D point) {
+		Point2D start = segment.getParent().getCurrentHead().toPoint2D();
+
+		double distance = start.distance(point);
+		
+		if(!resizingSegment){
+			segment.setConstrained(false);
+			for(FBKSegment child : segment.getParent().getChildren()){
+				child.setLocked(true, true);
+			}
+			resizingSegment = true;
+		}
+		
+		segment.getParent().resizeFromTail(distance, FBKVector.toVector(point));
 	}
 
 	private void finishResize(){
-		if(parentBone == null) return;
+		if (segment.hasAncestor() && !segment.isChildless()) {
+			for (FBKSegment child : segment.getParent().getChildren()) {
+				child.setLocked(false, true);
+			}
+		} else if (segment.isChildless()) {
+			segment.setConstrained(false);
+			segment.setLocked(false, true);
+		} else {
+			if(!segment.getLastState().isConstrained()){
+				segment.setConstrained(false);
+			}
+			segment.setChildrenAttached(true);
+			
+			segment.setConstrained(false, FBKConstraintPivot.NONE);
 
-		resizing = false;
+			for (FBKSegment child : segment.getChildren()) {
+				child.setLocked(false, true);
+			}
+		}
+		resizingSegment = false;
 
-		parentBone.finishResize();
-
-		currentBone.setLocked(false, true);
+		if (segment.getLastState().isConstrained()) {
+			segment.setConstrained(true);
+		}
+	}
+	
+	public void remove() {
+		if(segment.hasAncestor()){
+			if(segment.hasChildren()){
+				segment.clearDescendants();		
+			}
+		}else{
+			if(segment.hasChildren()){
+				segment.clearDescendants();	
+				
+			}else{
+				removeAnimate(()->{
+					segment.getContent().clear();
+					segment.getSkeleton().getSegmentsWritable().remove(segment);
+					armature.setCurrentJoint(null);		
+				});
+			}
+		}
+	}
+	
+	public void removeAnimate(Runnable script){
+		ScaleTransition scale = new ScaleTransition();
+		scale.setInterpolator(Interpolator.EASE_IN);
+		scale.setNode(jointView.getNode());
+		scale.setDuration(Duration.millis(150));
+		scale.setFromX(1);
+		scale.setFromY(1);
+		scale.setToX(0);
+		scale.setToY(0);
+		scale.play();
+		scale.setOnFinished(e -> {
+			if(script != null){
+				script.run();
+			}
+		});
 	}
 
-	private void setMouse(double x, double y) {
-		this.point = new Point(x, y);
+	public boolean isShowJoint() {
+		return this.jointView.getNode().isVisible();
 	}
 
-	private double getMouseX() {
-		return point.getX();
+	public void setShowJoint(boolean showJoint) {
+		this.jointView.getNode().setVisible(showJoint);
+	}
+	
+	public void setOpacity(double opacity){
+		this.jointView.getNode().setOpacity(opacity);
 	}
 
-	private double getMouseY() {
-		return point.getY();
+	public double getOpacity(){
+		return this.jointView.getNode().getOpacity();
 	}
 
-	public void setParentBone(FXBone bone) {
-		this.parent = bone;
+	public FXBone getFXBone() {
+		return fxBone;
 	}
 
-	public FXBone getParentBone() {
-		return parent;
+	public void setFXBone(FXBone fxBone) {
+		this.fxBone = fxBone;
+		this.fxBone.setJoint(this);
 	}
 
-	public boolean isFixed(){
-		return fixed;
+	public IFXJointView getJointView() {
+		return jointView;
+	}
+
+	public FBKSegment getSegment(){
+		return segment;
+	}
+	
+	public void setSegment(FBKSegment segment){
+		this.segment = segment;
+	}
+
+	public void setSelected(boolean selected) {
+		segment.setEffector();
+	}
+	
+	public boolean isLeafJoint(){
+		return leafJoint;
+	}
+	
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public boolean isChainingReady() {
+		return chainingReady;
+	}
+
+	private void setMouseCoordinates(double x, double y) {
+		this.point = new FBKVector(x, y);
+	}
+	
+	public FBKVector getLastMouseCoordinates(){
+		return point;
+	}
+
+	public boolean isConstrained(){
+		return segment.isConstrained();
 	}
 
 	public double getAngle() {
-		return currentBone.getAngle();
+		return segment.getAngle();
 	}
 
 	public void setAngle(double angle) {
-		this.currentBone.setAngle(angle);
+		this.segment.setAngle(angle);
 	}
 
 	public double getMaxAngle() {
-		return currentBone.getMaxAngle();
+		return segment.getMaxAngle();
 	}
 
 	public void setMaxAngle(double maxAngle) {
-		this.currentBone.setMaxAngle(maxAngle);
-
-		if(currentBone.getAngle() > currentBone.getMaxAngle()){
-			this.currentBone.setAngle(currentBone.getMaxAngle());
+		this.segment.setMaxAngle(maxAngle);
+		
+		if(segment.getAngle() > segment.getMaxAngle()){
+			this.segment.setAngle(segment.getMaxAngle());
 		}
 	}
 
 	public double getMinAngle() {
-		return currentBone.getMinAngle();
+		return segment.getMinAngle();
 	}
 
-	public void setMinAngle(double minAngle) {
-		this.currentBone.setMinAngle(minAngle);
-
-		if(currentBone.getAngle() < currentBone.getMinAngle()){
-			this.currentBone.setAngle(currentBone.getMinAngle());
+	public void setMinAngle(double minAngle) {	
+		this.segment.setMinAngle(minAngle);
+		
+		if(segment.getAngle() < segment.getMinAngle()){
+			this.segment.setAngle(segment.getMinAngle());
 		}
 	}
-
-	public boolean isMaster() {
-		return isMaster;
-	}
-
+	
 	@Override
 	public void register(FXObserver<FXJoint> observer) {
 		observers.add(observer);
@@ -459,21 +877,21 @@ public class FXJoint implements FXSubject<FXJoint> {
 	@Override
 	public void notifyObservers() {
 		observers.stream().forEach(o -> o.notify(this));
-
+		
 	}
 
 	private ChangeListener<? super  Number> AngleChangeListener = (osv, oldValue, newValue)->{
 		setAngle((double)newValue);
 	};
-
+	
 	private ChangeListener<? super  Number> MinAngleChangeListener = (osv, oldValue, newValue)->{
 		setMinAngle((double)newValue);
 	};
-
+	
 	private ChangeListener<? super  Number> MaxAngleChangeListener = (osv, oldValue, newValue)->{
 		setMaxAngle((double)newValue);
 	};
-
+	
 	public ChangeListener<? super  Number> getAngleChangeListener() {
 		return AngleChangeListener;
 	}
@@ -481,9 +899,8 @@ public class FXJoint implements FXSubject<FXJoint> {
 	public ChangeListener<? super  Number> getMinAngleChangeListener() {
 		return MinAngleChangeListener;
 	}
-
+	
 	public ChangeListener<? super  Number> getMaxAngleChangeListener() {
 		return MaxAngleChangeListener;
 	}
-
 }

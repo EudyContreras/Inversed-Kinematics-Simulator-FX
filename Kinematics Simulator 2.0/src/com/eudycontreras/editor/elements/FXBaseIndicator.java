@@ -72,7 +72,7 @@ public class FXBaseIndicator extends Group {
 		this.horizontalLine.setEndX(borderLines.getWidth());
 		this.horizontalLine.setEndY(borderLines.getTranslateY() + borderLines.getHeight()*0.55);
 
-		this.horizontalLine.setStroke(lineColor);
+		this.horizontalLine.setStroke(lineColor.deriveColor(1, 1, 1, 0.55));
 		this.horizontalLine.setStrokeWidth(this.lineWidth);
 
 		this.verticalLine.setStartX(borderLines.getTranslateX() + borderLines.getWidth()/2);
@@ -81,7 +81,7 @@ public class FXBaseIndicator extends Group {
 		this.verticalLine.setEndX(borderLines.getTranslateX() + borderLines.getWidth()/2);
 		this.verticalLine.setEndY(borderLines.getHeight());
 
-		this.verticalLine.setStroke(lineColor);
+		this.verticalLine.setStroke(lineColor.deriveColor(1, 1, 1, 0.55));
 		this.verticalLine.setStrokeWidth(lineWidth);
 		
 		this.createDragger(20);

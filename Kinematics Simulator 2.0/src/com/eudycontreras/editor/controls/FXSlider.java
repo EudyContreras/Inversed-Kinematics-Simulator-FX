@@ -1,4 +1,4 @@
-package com.eudycontreras.elements;
+package com.eudycontreras.editor.controls;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;

@@ -1,4 +1,4 @@
-package com.eudycontreras.components.assist;
+package com.eudycontreras.components.helpers;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -15,6 +15,10 @@ public class FXRotateAssist {
 	private Circle padder = new Circle();
 	
 	private Group wrapper = new Group();
+	
+	public enum AngleAdjustment {
+		MAX, MIN
+	}
 
 	public FXRotateAssist(double angleStart, double angleLength){
 		createAssistant(angleStart, angleLength);
@@ -37,6 +41,10 @@ public class FXRotateAssist {
 		padder.setFill(Color.TRANSPARENT);
 		
 		wrapper.getChildren().addAll(padder,angleConstraintAssist);
+		
+		padder.setMouseTransparent(true);
+
+		padder.setOnMouseClicked(e -> {});
 	}
 	
 	public Node getNode(){

@@ -52,6 +52,31 @@
   Sliders Skin
 
 ****************************************************************/
+#range-slider-label{
+    -fx-min-width: 20;
+    -fx-min-height: 10;
+    -fx-padding: 0;
+    -fx-border-radius: 6;
+    -fx-border-width: 1; 
+    -fx-border-color: rgb(10,10,10);
+  	-fx-background-color: rgb(22, 22, 22);
+  	-fx-background-radius: 6;
+  	-fx-background-insets: 0;
+    -fx-font-family: TRON;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+	-fx-text-fill: rgb(70, 190, 220);
+}
+#range-slider {
+	-fx-border-width: 0 8 0 8; 
+    -fx-border-color: rgb(25, 25, 25);
+	-fx-background-color: rgb(30, 30, 30);
+	-fx-background-insets: 0;
+    -fx-background-radius: 3em;
+    -fx-pref-width: 2px;
+    -fx-pref-height: 2px;
+    -fx-padding: 8;
+}
 .slider {
 	-fx-background-color: transparent;
 }
@@ -62,7 +87,7 @@
 }
 
 .slider.thumb:hover {
-	-fx-background-color: rgb(0,160,255);
+	-fx-background-color: transparent;
 }
 /****************************************************************
 
@@ -77,80 +102,76 @@
 {
     -fx-tab-min-width:60px;
 }
-
 .tab{
     -fx-background-insets: 0 1 0 1,0,0;
 }
 .tab-pane .tab
 {
-    -fx-background-color: #333333;
+    -fx-background-color: rgb(25, 25, 25);
 }
-
 .tab-pane .tab:selected
 {
-    -fx-background-color: rgb(80, 80, 80);
+    -fx-background-color: rgb(30, 30, 30);
 }
-
 .tab .tab-label {
     -fx-alignment: CENTER;
-    -fx-text-fill: #828282;
+    -fx-text-fill: rgb(70, 70,70);
     -fx-font-size: 12px;
     -fx-font-weight: bold;
 }
-
 .tab:selected .tab-label {
     -fx-alignment: CENTER;
-    -fx-text-fill: white;
+    -fx-text-fill: rgb(70, 190, 220);
 }
 .tab-pane:top *.tab-header-area {
     -fx-background-insets: 0, 0 0 1 0;
     -fx-padding: 0.416667em 0.166667em 0.0em 0.0em; /* overriden as 5 2 0 0 */
 }
-/*
-* CONTROL BUTTONS */
-
 .tab-down-button
 {
--fx-background-color: transparent;
-
+	-fx-background-color: transparent;
 }
 .tab-down-button:hover
 {
--fx-background-color: #333333;
+	-fx-background-color: #333333;
 
 }
 .tab-down-button .arrow
 {
--fx-background-color: dodgerblue;
--fx-background-insets: 1 0 -1 0, 0;
--fx-padding: 0.238083em 0.416667em 0.238083em 0.416667em; /* 2.857 5 2.857 5 */
--fx-shape: "M 0 0 H 7 L 3.5 4 z";
+	-fx-background-color: dodgerblue;
+	-fx-background-insets: 1 0 -1 0, 0;
+	-fx-padding: 0.238083em 0.416667em 0.238083em 0.416667em; /* 2.857 5 2.857 5 */
+	-fx-shape: "M 0 0 H 7 L 3.5 4 z";
 }
 /* FLOATING TABS CUSTOMISATION */
 .tab-pane.floating *.tab-header-background {
--fx-background-color: black;
+	-fx-background-color: black;
 }
 .tab-pane.floating *.tab-header-area
 {
--fx-background-color: black;
+	-fx-background-color: black;
 }
 .tab-pane.floating *.tab-content-area
 {
--fx-background-color: -fx-tab-border-color, -fx-control-inner-background;
--fx-background-insets: 0, 1;
--fx-background-radius: 5, 4;
+	-fx-background-color: -fx-tab-border-color, -fx-control-inner-background;
+	-fx-background-insets: 0, 1;
+	-fx-background-radius: 5, 4;
 }
 .tab-pane.floating *.tab
 {
--fx-background-color: -fx-tab-border-color, -fx-inner-border, -fx-body-color;
--fx-background-insets: 0, 1, 2;
--fx-background-radius: 5 5 0 0, 4 4 0 0, 3 3 0 0;
+	-fx-background-color: -fx-tab-border-color, -fx-inner-border, -fx-body-color;
+	-fx-background-insets: 0, 1, 2;
+	-fx-background-radius: 5 5 0 0, 4 4 0 0, 3 3 0 0;
 }
 .tab-pane.floating *.tab:selected
 {
--fx-background-color: -fx-tab-border-color, -fx-control-inner-background;
--fx-background-insets: 0 0 -1 0, 1 1 -1 1;
--fx-background-radius: 5 5 0 0, 4 4 0 0;
+	-fx-background-color: -fx-tab-border-color, -fx-control-inner-background;
+	-fx-background-insets: 0 0 -1 0, 1 1 -1 1;
+	-fx-background-radius: 5 5 0 0, 4 4 0 0;
+}
+.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
 }
 /****************************************************************
 
@@ -173,10 +194,9 @@
 
 ****************************************************************/
 .scroll-bar {
-	-fx-background-color: rgba(96, 96, 96, 0);
+	-fx-background-color: rgba(56, 96, 96, 0);
 	-fx-background-radius: 2em;
 }
-
 .scroll-bar .filler{ 
 	-fx-background-color: transparent;
 	-fx-color: transparent;
@@ -185,7 +205,6 @@
 	-fx-background-color: transparent;
 	-fx-color: transparent;
 }
-
 .scroll-pane > .filler{ 
 	-fx-background-color: transparent;
 	-fx-color: transparent;
@@ -200,42 +219,48 @@
 	-fx-color: transparent;
 }
 .scroll-pane .corner{ 
-	-fx-background-color: transparent;
+	-fx-background-color: rgb(25, 25, 25);
 	-fx-color: transparent;
 }
-
 .scroll-bar:horizontal .track, .scroll-bar:vertical .track {
-	-fx-background-color: transparent;
-	-fx-border-color: transparent;
-	-fx-background-radius: 2em;
+	-fx-background-color: rgb(25, 25, 25);
+	-fx-background-insets: 0;
+	-fx-background-radius: 0em;
+	-fx-pref-width: 2px;
 }
-
 .scroll-bar:vertical .track-background, .scroll-bar:horizontal .track-background
 	{
-	-fx-background-color: transparent;
+	-fx-background-color: rgb(25, 25, 25);
 	-fx-background-insets: 0;
-	-fx-background-radius: 2em;
+	-fx-background-radius: 0em;
+	-fx-pref-width: 2px;
 }
-
 .scroll-bar:horizontal .thumb {
-	-fx-background-color: #333333;
-	-fx-background-insets: 4 0 4 0;
-	-fx-background-radius: 2em;
+	-fx-border-width: 6 0 6 0; 
+    -fx-border-color: rgb(25, 25, 25);
+	-fx-background-color: rgb(30, 30, 30);
+	-fx-background-insets: 0;
+    -fx-background-radius: 3em;
+    -fx-pref-width: 4px;
+    -fx-pref-height: 4px;
 }
-
 .scroll-bar:vertical .thumb {
-	-fx-background-color: #333333;
-	-fx-background-insets: 0 4 0 4;
-	-fx-background-radius: 2em;
+	-fx-border-width: 0 8 0 8; 
+    -fx-border-color: rgb(25, 25, 25);
+	-fx-background-color: rgb(30, 30, 30);
+	-fx-background-insets: 0;
+    -fx-background-radius: 3em;
+    -fx-pref-width: 2px;
+    -fx-pref-height: 2px;
+    -fx-padding: 8;
 }
-
 .scroll-bar:horizontal .thumb:hover, .scroll-bar:vertical .thumb:hover {
-	-fx-background-color: rgb(0,160,255);
+	-fx-background-color: rgb(50, 140, 170);
 }
 
 .scroll-bar:horizontal .thumb:pressed, .scroll-bar:vertical .thumb:pressed
 	{
-	-fx-background-color: rgb(0,160,255);
+	-fx-background-color: rgb(50, 140, 170);
 }
 
 .scroll-bar:vertical .increment-button, .scroll-bar:vertical .decrement-button
@@ -254,27 +279,55 @@
 
 .scroll-bar:horizontal .increment-arrow {
 	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
-	-fx-background-color: rgb(211, 211, 211);
+	-fx-background-color: rgb(50, 140, 170);
 	-fx-padding: 0.25em;
 	-fx-rotate: -90;
 }
 
 .scroll-bar:vertical .increment-arrow {
-	-fx-background-color: rgb(211, 211, 211);
+	-fx-background-color: rgb(50, 140, 170);
+	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
+	-fx-padding: 0.25em;
+	-fx-rotate: 0;
+}
+
+.scroll-bar:horizontal .increment-arrow:pressed {
+	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
+	-fx-background-color: rgb(80, 200, 230);
+	-fx-padding: 0.25em;
+	-fx-rotate: -90;
+}
+
+.scroll-bar:vertical .increment-arrow:pressed  {
+	-fx-background-color: rgb(80, 200, 230);
 	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
 	-fx-padding: 0.25em;
 	-fx-rotate: 0;
 }
 
 .scroll-bar:horizontal .decrement-arrow {
-	-fx-background-color: rgb(211, 211, 211);
+	-fx-background-color: rgb(50, 140, 170);
 	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
 	-fx-padding: 0.25em;
 	-fx-rotate: 90;
 }
 
 .scroll-bar:vertical .decrement-arrow {
-	-fx-background-color: rgb(211, 211, 211);
+	-fx-background-color: rgb(50, 140, 170);
+	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
+	-fx-padding: 0.25em;
+	-fx-rotate: -180;
+}
+
+.scroll-bar:horizontal .decrement-arrow:pressed {
+	-fx-background-color: rgb(80, 200, 230);
+	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
+	-fx-padding: 0.25em;
+	-fx-rotate: 90;
+}
+
+.scroll-bar:vertical .decrement-arrow:pressed {
+	-fx-background-color: rgb(80, 200, 230);
 	-fx-shape: "M 0 0 L 4 8 L 8 0 Z";
 	-fx-padding: 0.25em;
 	-fx-rotate: -180;

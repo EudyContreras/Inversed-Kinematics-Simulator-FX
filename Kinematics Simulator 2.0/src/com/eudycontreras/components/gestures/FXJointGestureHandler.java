@@ -15,11 +15,11 @@ public class FXJointGestureHandler extends FXGestureHandler {
 	public FXJointGestureHandler(FXEditor editor, FXJoint joint) {
 		super(editor);
 		this.joint = joint;
-		this.joint.getJoint().getNode().setOnMouseEntered(getOnMouseEnteredEventHandler());
-		this.joint.getJoint().getNode().setOnMouseExited(getOnMouseExitedEventHandler());
-		this.joint.getJoint().getNode().setOnMousePressed(getOnMousePressedEventHandler());
-		this.joint.getJoint().getNode().setOnMouseReleased(getOnMouseReleasedEventHandler());
-		this.joint.getJoint().getNode().setOnMouseDragged(getOnMouseDraggedEventHandler());
+		this.joint.getJointView().getNode().setOnMouseEntered(getOnMouseEnteredEventHandler());
+		this.joint.getJointView().getNode().setOnMouseExited(getOnMouseExitedEventHandler());
+		this.joint.getJointView().getNode().setOnMousePressed(getOnMousePressedEventHandler());
+		this.joint.getJointView().getNode().setOnMouseReleased(getOnMouseReleasedEventHandler());
+		this.joint.getJointView().getNode().setOnMouseDragged(getOnMouseDraggedEventHandler());
 	}
 
 	@Override
@@ -43,8 +43,8 @@ public class FXJointGestureHandler extends FXGestureHandler {
 		dragContext.mouseAnchorX = event.getSceneX();
 		dragContext.mouseAnchorY = event.getSceneY();
 
-		dragContext.translateAnchorX = joint.getJoint().getCenterX();
-		dragContext.translateAnchorY = joint.getJoint().getCenterY();
+		dragContext.translateAnchorX = joint.getJointView().getCenterX();
+		dragContext.translateAnchorY = joint.getJointView().getCenterY();
 
 		performGesture(GestureType.MOUSE_RELEASED,event, NaN, NaN);
 	}

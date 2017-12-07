@@ -1,9 +1,11 @@
 
-package com.eudycontreras.javafx.fbk.samples;
+package com.eudycontreras.editor.application;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.eudycontreras.components.handlers.FXBone;
+import com.eudycontreras.components.handlers.FXJoint;
 import com.eudycontreras.components.visuals.FXBoneView;
 import com.eudycontreras.components.visuals.FXBoneViewType;
 import com.eudycontreras.components.visuals.FXJointView;
@@ -11,6 +13,7 @@ import com.eudycontreras.components.visuals.FXJointViewType;
 import com.eudycontreras.components.visuals.IFXBoneView;
 import com.eudycontreras.components.visuals.IFXJointView;
 import com.eudycontreras.editor.gestures.FXEditorGestures;
+import com.eudycontreras.javafx.fbk.listeners.FBKSegmentEventListener.FBKSegmentStatus;
 import com.eudycontreras.javafx.fbk.models.FBKSegment;
 import com.eudycontreras.javafx.fbk.models.FBKSegmentChain;
 import com.eudycontreras.javafx.fbk.models.FBKVector;
@@ -32,9 +35,9 @@ public class FXArmatureManager {
 	private boolean toolsClosed = false;
 	private boolean toolsOpened = true;
 	
-	private double jointRadius = 10;
+	private double jointRadius = 8;
 	private double boneLenght = 100;
-	private double boneDensity = 15;
+	private double boneDensity = 12;
 	
 	private Stage stage;
 	private Scene scene;
@@ -70,6 +73,10 @@ public class FXArmatureManager {
 			if(e.isControlDown()){
 
 				appendJoint(getCurrentJoint(), FBKVector.toVector(point));
+				
+			}else if(e.isShiftDown()){
+
+				appendJoint(getCurrentJoint(), FBKVector.toVector(point), false);
 				
 			}else{
 				if(!wasDragging){
@@ -167,15 +174,35 @@ public class FXArmatureManager {
 
 		if(parentJoint.getSegment().hasAncestor()){
 			
-			parentJoint.getSegment().getParent().addChild(child.getSegment());
-			
+			parentJoint.getSegment().getListener().onSegmentStatusChange(parentJoint.getSegment(), FBKSegmentStatus.ONLY_CHILD);		
+	
 			parentJoint.changeChainingStatus();
 			
-			double angle = getAngle(FBKVector.ZERO, child.getSegment().getCurrentTail());
+			child.getSegment().moveHead(parentJoint.getSegment().getCurrentHead());
+						
+			Point2D start = parentJoint.getSegment().getSkeleton().localToScene(parentJoint.getSegment().getParent().getCurrentTail().toPoint2D());
+			
+			Point2D end = parentJoint.getSegment().getSkeleton().localToScene(child.getSegment().getCurrentTail().toPoint2D());
+			
+			double angle = getAngle(FBKVector.toVector(start),FBKVector.toVector(end));
+
+			System.out.println(angle);
+		
+			System.out.println(child.getAngle());
+			
+			parentJoint.getSegment().getParent().addChild(child.getSegment());
 			
 			child.getSegment().moveHead(parentJoint.getSegment().getCurrentHead());
 			
+			FBKSegment.traverseDescendants(child.getSegment(), s-> {
+				s.setLocked(true, true);
+			});
+			
 			child.getSegment().applyRotationAngle(angle);
+			
+			FBKSegment.traverseDescendants(child.getSegment(), s-> {
+				s.setLocked(false, false);
+			});
 			
 			child.setShowJoint(false);
 		}else{
@@ -191,6 +218,10 @@ public class FXArmatureManager {
 	}
 	
 	public void appendJoint(FXJoint parentJoint, FBKVector point){
+		appendJoint(parentJoint, point, true);
+	}
+	
+	public void appendJoint(FXJoint parentJoint, FBKVector point, boolean newEffector){
 		
 		if(parentJoint == null) {
 			return;
@@ -208,8 +239,9 @@ public class FXArmatureManager {
 				child.moveHead(parentJoint.getSegment().getCurrentHead());
 				child.setLength(length);
 				child.moveTail(point);
+				child.computeFBK();
 				
-				appendJoint(addGraphicalContent(skeleton, child, getJoint(10), getBone(child), false), child.getCurrentTail());
+				appendJoint(addGraphicalContent(skeleton, child, getJoint(jointRadius), getBone(child), false), child.getCurrentTail(), newEffector);
 			}
 			
 		}else{
@@ -218,9 +250,12 @@ public class FXArmatureManager {
 			parentJoint.getSegment().moveTail(point);
 			parentJoint.getSegment().addChild(child);
 			
-			setCurrentJoint(addGraphicalContent(skeleton, child, getJoint(10), getBone(child)));
+			FXJoint joint = addGraphicalContent(skeleton, child, getJoint(jointRadius), getBone(child));
 			
-			child.setEffector();
+			if(newEffector){
+				setCurrentJoint(joint);
+				child.setEffector();
+			}	
 		}
 	}
 	
@@ -234,9 +269,9 @@ public class FXArmatureManager {
 		
 		child.addChild(descendant);
 		
-		addGraphicalContent(skeleton, child, getJoint(10), getBone(child), false);
+		addGraphicalContent(skeleton, child, getJoint(jointRadius), getBone(child), false);
 
-		setCurrentJoint(addGraphicalContent(skeleton, descendant, getJoint(10), getBone(descendant)));
+		setCurrentJoint(addGraphicalContent(skeleton, descendant, getJoint(jointRadius), getBone(descendant)));
 		
 		descendant.setEffector();
 	}
@@ -251,12 +286,13 @@ public class FXArmatureManager {
 		
 		child.addChild(descendant);
 		
-		addGraphicalContent(skeleton, child, getJoint(10), getBone(child), false);
+		addGraphicalContent(skeleton, child, getJoint(jointRadius), getBone(child), false);
 
-		setCurrentJoint(addGraphicalContent(skeleton, descendant, getJoint(10), getBone(descendant)));
+		setCurrentJoint(addGraphicalContent(skeleton, descendant, getJoint(jointRadius), getBone(descendant)));
 		
 		descendant.setEffector();
 	}
+	
 	private FXJoint addGraphicalContent(FBKSegmentChain skeleton, FBKSegment segment, IFXJointView jointView, IFXBoneView boneView) {
 		return addGraphicalContent(skeleton, segment, jointView, boneView, true);
 	}
@@ -278,7 +314,7 @@ public class FXArmatureManager {
 		
 		FBKSegment head = new FBKSegment(length);
 	
-		addGraphicalContent(skeleton, head, getJoint(10),getBone(head));
+		addGraphicalContent(skeleton, head, getJoint(jointRadius),getBone(head));
 
 		FXJoint joint = null;
 		
@@ -286,7 +322,7 @@ public class FXArmatureManager {
 
 			final FBKSegment segment = new FBKSegment(length, 0, minAngle, maxAngle);
 			
-			joint = addGraphicalContent(skeleton, segment, getJoint(10), getBone(segment));
+			joint = addGraphicalContent(skeleton, segment, getJoint(jointRadius), getBone(segment));
 
 			head.addChild(segment);
 
@@ -308,7 +344,7 @@ public class FXArmatureManager {
 	
 	private IFXBoneView getBone(FBKSegment segment, double length) {
 		double height = boneDensity + (length * 0.065d);
-		return FXBoneView.getFXBoneView(FXBoneViewType.TYPE_A, 10, 0, length, height);
+		return FXBoneView.getFXBoneView(FXBoneViewType.TYPE_A, jointRadius, 0, length, height);
 	}
 
 	public double getAngle(FBKVector start, FBKVector end) {

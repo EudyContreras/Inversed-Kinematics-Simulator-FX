@@ -1,4 +1,4 @@
-package com.eudycontreras.editor.elements;
+package com.eudycontreras.editor.controls;
 
 import com.eudycontreras.editor.application.FXPaintResources;
 import com.eudycontreras.utilities.FXKinematicsUtility;

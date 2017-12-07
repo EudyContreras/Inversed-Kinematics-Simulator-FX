@@ -1,7 +1,7 @@
 package com.eudycontreras.editor.gestures;
 
 import com.eudycontreras.editor.application.FXEditor;
-import com.eudycontreras.editor.elements.FXZoomSlider;
+import com.eudycontreras.editor.controls.FXZoomSlider;
 import com.eudycontreras.editor.handlers.FXGestureHandler;
 import com.eudycontreras.editor.sections.FXEditorWindow;
 

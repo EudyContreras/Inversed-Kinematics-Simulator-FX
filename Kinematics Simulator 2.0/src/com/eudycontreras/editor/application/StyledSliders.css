@@ -11,8 +11,3 @@
     -fx-base: dodgerblue;
 
 }
-
-#FX2 {
-        -fx-fill:  linear-gradient(cyan , dodgerblue);
-}
- 

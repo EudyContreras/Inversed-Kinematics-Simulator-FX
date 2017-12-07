@@ -3,6 +3,7 @@ package com.eudycontreras.editor.sections;
 import com.eudycontreras.editor.application.FXEditor;
 import com.eudycontreras.editor.application.FXImageResources;
 import com.eudycontreras.editor.application.Styles;
+import com.eudycontreras.editor.controls.FXRangeSlider;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -29,23 +30,24 @@ public class FXEditorSideBoard {
 	private HBox content = new HBox();
 	private Pane board = new StackPane();
 	private VBox layout = new VBox();
-	private EditingArea rect = new EditingArea(Styles.WINDOW, 350, 800);
+	private EditingArea rect = new EditingArea(Styles.WINDOW, 410, 1200);
 
 	public FXEditorSideBoard(FXEditor editor) {
 
 		content.setId("side-board-content");
 		
-		content.setPrefWidth(150);
+		content.setPrefWidth(70);
 		content.widthProperty().addListener(dragTranslation(editor));
 		content.setRotationAxis(Rotate.Y_AXIS);
 		content.setRotate(180);
+		content.setOpacity(0.35);
 
 		layout.setPickOnBounds(false);
-		layout.setPadding(new Insets(60,10,0,10));
+		layout.setPadding(new Insets(40,10,0,20));
 
-		board.setId("footer-bar");
+		board.setId("side-board");
 		board.setPadding(new Insets(0,50,50,0));
-	
+		
 		board.getChildren().add(content);
 		board.getChildren().add(layout);
 		layout.getChildren().add(rect);
@@ -95,7 +97,7 @@ public class FXEditorSideBoard {
 
 			sideEditorTools = new FXEditorSideTools(id, 10, width, height);
 
-//			VBox.setVgrow(sideEditorTools, Priority.ALWAYS);
+			VBox.setVgrow(sideEditorTools, Priority.ALWAYS);
 //
 //			setAlignment(Pos.CENTER);
 			getChildren().add(sideEditorTools);

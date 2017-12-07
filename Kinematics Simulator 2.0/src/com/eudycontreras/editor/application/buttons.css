@@ -5,9 +5,9 @@
     -darkest-black: rgb(3.0, 3.0, 3.0);
     -toolbar_fill: rgb(25.0, 25.0, 25.0);
     -side-board-content-fill: rgb(45.0, 45.0, 45.0);
-   	-button-color: rgb(35, 35, 36);
+   	-button-color: rgb(25, 25, 25);
    	
-   	-color-primary: rgb(30, 30, 30);
+   	-color-primary: rgb(25, 25, 25);
    	-color-primary-light: rgb(45, 45, 45);
  	-color-primary-dark: rgb(25, 25, 25);
  	
@@ -32,29 +32,39 @@
 
 #footer-bar {
     -fx-base: -color-primary;
-    -fx-border-width: 2 0 2 0; 
-    -fx-border-color: -color-primary-dark;
+    -fx-border-width: 4 0 2 0; 
+	-fx-border-color: -toolbar_fill;
     -fx-background-color: -color-primary;
     -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
-    -fx-padding: 0.5em 0.416667em 0.9em 0.416667em;
+    -fx-padding: 0.5em 0.416667em 1.1em 0.416667em;
     -fx-effect: dropshadow(two-pass-box,rgba(20.0,20.0,20.0,0.65),22.0,0.6,0.0,12.0);
 }
 
 #side-board {
- 	-fx-base: -color-primary;
-    -fx-border-width: 0 0 2 0; 
-    -fx-border-color: -color-primary-dark;
+    -fx-base: -color-primary;
+    -fx-border-width: 0 4 0 0; 
+    -fx-border-color: -toolbar_fill;
     -fx-background-color: -color-primary;
-    -fx-background-insets: 0.0, 0.0 0.0 1.0 0.0;
-    -fx-padding: 0.5em 0.416667em 0.9em 0.416667em;
+    -fx-background-insets: 0.0, 0.0 0.0 0.0 0.0;
+    -fx-padding: 0 0 0 0;
+    -fx-effect: dropshadow(two-pass-box,rgba(20.0,20.0,20.0,0.65),22.0,0.6,0.0,12.0);
+}
+
+#inner-side-board {
+    -fx-base: -color-primary;
+    -fx-border-width: 0 4 0 0; 
+    -fx-border-color: -toolbar_fill;
+    -fx-background-color: -color-primary;
+    -fx-background-insets: 0.0, 0.0 0.0 0.0 0.0;
+    -fx-padding: 0 0 0 0;
+    -fx-effect: dropshadow(two-pass-box,rgba(20.0,20.0,20.0,0.65),22.0,0.6,0.0,12.0);
 }
 
 #side-board-content {
     -fx-base: -toolbar_fill;
-    -fx-font-size: 12.0pt;
-    -fx-border-width: 60 10 0 10; 
+    -fx-border-width: 0 8 0 4; 
     -fx-border-color: -toolbar_fill;
-    -fx-background-color:-side-board-content-fill;
+ 	-fx-background-color: -color-primary;
     -fx-background-insets: 0;
     -fx-padding:0;
 }

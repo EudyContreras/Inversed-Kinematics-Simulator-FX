@@ -26,6 +26,8 @@ import javafx.util.Duration;
 
 public class ArcToDemo extends Application {
 
+	public static final double speed = 4;
+	public static final double rotationRadius = 10;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -36,7 +38,7 @@ public class ArcToDemo extends Application {
 
         ObservableList<Circle> list = FXCollections.observableArrayList();
 
-        for(int i = 0; i<10; i++){
+        for(int i = 0; i<5; i++){
         	  Circle circle = new Circle(10);
               circle.setCenterX(i+12);
               circle.setTranslateY(i*12);
@@ -47,25 +49,26 @@ public class ArcToDemo extends Application {
         final long startNanoTime = System.nanoTime();
 
 		primaryStage.show();
-
-		int i = 0;
 		new AnimationTimer() {
 
 			public void handle(long currentNanoTime) {
-//				i++;
 
-				double t = (currentNanoTime - startNanoTime) / 1000000000.0;
+				double time = (currentNanoTime - startNanoTime) / 1000000000.0;
 
-				t = t * 3;
-				double radius = 14;
+				double multiplier = 1.0;
+				
+				time = time * speed;
 
 				for(Node node: root.getChildren()){
+					
 					Circle circle = (Circle)node;
-					double x = (circle.getRadius()+i + circle.getCenterX()*i) * Math.cos(t) * (radius);
-					double y = (circle.getRadius()+i + circle.getCenterY()*i) * Math.sin(t) * (radius);
+					
+					double x = (circle.getRadius() + circle.getCenterX()) * Math.cos(time * multiplier) * (rotationRadius);
+					double y = (circle.getRadius() + circle.getCenterY()) * Math.sin(time * multiplier) * (rotationRadius);
 
 					circle.setTranslateX(x);
 					circle.setTranslateY(y);
+					
 				}
 
 			}

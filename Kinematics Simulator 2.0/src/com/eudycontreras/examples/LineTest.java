@@ -1,16 +1,10 @@
 package com.eudycontreras.examples;
 
 import java.util.LinkedList;
-import java.util.List;
-
-import com.eudycontreras.components.models.Bone;
-import com.eudycontreras.components.models.Bone.PointType;
 
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;

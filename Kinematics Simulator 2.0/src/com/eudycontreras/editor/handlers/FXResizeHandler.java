@@ -24,7 +24,7 @@ public class FXResizeHandler {
 	 * The margin around the control that a user can click in to start resizing
 	 * the region.
 	 */
-	private static final int RESIZE_MARGIN = 10;
+	private static final int RESIZE_MARGIN = 4;
 
 	private final Region region;
 
@@ -110,8 +110,8 @@ public class FXResizeHandler {
 			double mousey = event.getY();
 
 			double newHeight = region.getMinHeight() + (mousey - y);
-//
-//			region.setMinHeight(newHeight);
+
+			region.setMinHeight(newHeight);
 
 			y = mousey;
 		}
@@ -142,8 +142,8 @@ public class FXResizeHandler {
 		// setting a min height that is smaller than the current height will
 		// have no effect
 		if (!initMinHeight) {
-//			region.setMinHeight(region.getHeight());
-//			initMinHeight = true;
+			region.setMinHeight(region.getHeight());
+			initMinHeight = true;
 		}
 
 		y = event.getY();

@@ -3,8 +3,8 @@ package com.eudycontreras.editor.dialogs;
 
 import com.eudycontreras.components.handlers.FXJoint;
 import com.eudycontreras.editor.application.FXEditorApp;
-import com.eudycontreras.elements.FXSlider;
-import com.eudycontreras.elements.FXToggles;
+import com.eudycontreras.editor.controls.FXSlider;
+import com.eudycontreras.editor.controls.FXToggles;
 import com.eudycontreras.models.ToggleInfo;
 import com.eudycontreras.views.FXSeparator;
 
@@ -102,7 +102,7 @@ public class FXEditorJointDialog extends StackPane implements FXEditorDialog{
         this.setWidth(width);
         this.setHeight(height);
         this.setShape(background);
-	    this.getStylesheets().add(FXEditorApp.class.getResource("StyledSliders.css").toExternalForm());
+	   // this.getStylesheets().add(FXEditorApp.class.getResource("StyledSliders.css").toExternalForm());
 		this.getChildren().add(background);
 	    this.getChildren().add(vLayout);
 	}

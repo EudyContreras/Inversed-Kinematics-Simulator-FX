@@ -37,32 +37,38 @@ public class FXEditorToolbar {
 	private Button sampleButton4 = new Button("Line");
 	private Button sampleButton5 = new Button("Process");
 	
-	private Image image = FXImageResources.create_new_project_icon.getImage();
+	private Image[] image = new Image[5];
+	
 
 	public FXEditorToolbar(FXEditor editor) {
-
+		
+		image[0] = FXImageResources.create_new_project_icon.getImage();
+		image[1] = FXImageResources.settings_icon.getImage();
+		image[3] = FXImageResources.undo_icon.getImage();
+		image[4] = FXImageResources.redo_icon.getImage();
+		
 		editor.getLayoutWindow().setId("background");
 		
-		spacer.getStyleClass().setAll("spacer");
-
-		buttonBar.getStyleClass().setAll("segmented-button-bar");
-
-		sampleButton1.getStyleClass().addAll("first");
-
-		sampleButton5.getStyleClass().addAll("last", "capsule");
+//		spacer.getStyleClass().setAll("spacer");
+//
+//		buttonBar.getStyleClass().setAll("segmented-button-bar");
+//
+//		sampleButton1.getStyleClass().addAll("first");
+//
+//		sampleButton5.getStyleClass().addAll("last", "capsule");
 		
 		buttonBar.setAlignment(Pos.CENTER);
 
 		buttonBar.getChildren().addAll(
-				createButton("Open",image ), 
-				createButtonDivider(30),
-				createButton("Save",image ),
-				createButtonDivider(30),
-				createButton("Save",image ),
-				createButtonDivider(30),
-				createButton("Save",image ),
-				createButtonDivider(30),
-				createButton("Save",image ));
+				createButtonSpace(5),
+				createButton("Open",image[0] ), 
+				createButtonDivider(25),
+				createButton("Save",image[1] ),
+				createButtonDivider(25),
+				createButton("Save",image[3] ),
+				createButtonDivider(25),
+				createButton("Save",image[4] )
+				);
 
 		toolBar.getItems().addAll(spacer, buttonBar);
 
@@ -78,7 +84,8 @@ public class FXEditorToolbar {
 		VBox button = new VBox(1);
 		Text label = new Text(text);
 		ImageView graphic = new ImageView(image);
-
+		graphic.setFitWidth(30);
+		graphic.setFitHeight(30);
 		InnerShadow shadow = new InnerShadow();
 		
 		shadow.setChoke(1);
@@ -87,12 +94,31 @@ public class FXEditorToolbar {
 		InnerShadow highlight = new InnerShadow();
 		
 		highlight.setChoke(1);
-		highlight.setColor(FXPaintResources.SECONDARY_COLOR);
+		highlight.setColor(FXPaintResources.ACCENT_COLOR);
 
 		graphic.setEffect(highlight);
 		graphic.setCache(true);
 		graphic.setCacheHint(CacheHint.SPEED);
 		
+		button.setOnMousePressed(e -> {
+			highlight.setColor(FXPaintResources.ACCENT_COLOR_BRIGHT);
+		});
+		
+		button.setOnMouseEntered(e -> {
+			highlight.setColor(FXPaintResources.ACCENT_COLOR);
+		});
+		
+		button.setOnMouseExited(e -> {
+			highlight.setColor(Color.rgb(45, 45, 45));
+		});
+		
+		button.setOnMouseDragExited(e -> {
+			highlight.setColor(Color.rgb(150, 150, 150));
+		});
+		
+		button.setOnMouseReleased(e -> {
+			highlight.setColor(FXPaintResources.ACCENT_COLOR);
+		});
 //		graphic.effectProperty().bind(
 //	                Bindings
 //	                    .when(graphic.hoverProperty())
@@ -103,7 +129,7 @@ public class FXEditorToolbar {
 
 		label.setFill(Color.WHITE);
 
-		button.setPadding(new Insets(4, 4, 4, 4));
+		button.setPadding(new Insets(6, 1, 6, 1));
 		button.setAlignment(Pos.CENTER);
 		button.getChildren().add(graphic);
     	
@@ -121,6 +147,19 @@ public class FXEditorToolbar {
 		separator.setStroke(highlight);
 		separator.setStrokeWidth(0.5);
 		
+		
+		return separator;
+	}
+	
+	private Node createButtonSpace(){
+		return createButtonSpace(0);
+	}
+			
+	private Node createButtonSpace(double width){
+		
+		Rectangle separator = new Rectangle(width,0);
+		separator.setFill(Color.TRANSPARENT);
+		separator.setVisible(false);
 		
 		return separator;
 	}

@@ -1,8 +1,8 @@
 package com.eudycontreras.editor.application;
 
+import com.eudycontreras.editor.controls.FXZoomSlider;
 import com.eudycontreras.editor.elements.FXBaseIndicator;
 import com.eudycontreras.editor.elements.FXEditorGrid;
-import com.eudycontreras.editor.elements.FXZoomSlider;
 import com.eudycontreras.editor.gestures.FXEditorGestures;
 import com.eudycontreras.editor.handlers.FXResizeHandler;
 import com.eudycontreras.editor.handlers.FXStylesHandler;
@@ -11,7 +11,6 @@ import com.eudycontreras.editor.sections.FXEditorSideBoard;
 import com.eudycontreras.editor.sections.FXEditorToolbar;
 import com.eudycontreras.editor.sections.FXEditorViewport;
 import com.eudycontreras.editor.sections.FXEditorWindow;
-import com.eudycontreras.javafx.fbk.samples.FXArmatureManager;
 import com.eudycontreras.models.Size;
 import com.eudycontreras.utilities.FXPaintUtility;
 
@@ -65,7 +64,7 @@ public class FXEditor{
 
 		FXZoomSlider zoomSlider = new FXZoomSlider(1, FXEditorGestures.MAX_SCALE, FXEditorGestures.MIN_SCALE);
 		FXEditorGrid editorGrid = new FXEditorGrid(width, height, 20, Color.rgb(50, 50, 50), Color.rgb(80, 80, 80));
-		FXBaseIndicator indicator = new FXBaseIndicator(new Size(width,height),null,2);
+		FXBaseIndicator indicator = new FXBaseIndicator(new Size(width,height),null,3);
 		FXEditorSideBoard sideBoard = new FXEditorSideBoard(this);
 		FXEditorViewport viewPort = new FXEditorViewport(this);
 		FXEditorToolbar toolbar = new FXEditorToolbar(this);

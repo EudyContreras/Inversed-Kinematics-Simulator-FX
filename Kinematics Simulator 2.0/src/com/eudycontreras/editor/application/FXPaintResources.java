@@ -8,7 +8,7 @@ public class FXPaintResources {
 	
 	public static final Color PRIMARY_COLOR_LIGHT = Color.rgb(80, 80, 80);
 	
-	public static final Color PRIMARY_COLOR_DARK = Color.rgb(25, 25, 25);
+	public static final Color PRIMARY_COLOR_DARK = Color.rgb(30, 30, 30);
 	
 	
 	

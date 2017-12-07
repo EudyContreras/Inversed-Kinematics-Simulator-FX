@@ -1,4 +1,4 @@
-package com.eudycontreras.components.assist;
+package com.eudycontreras.components.helpers;
 
 import com.eudycontreras.javafx.fbk.models.FBKVector;
 
@@ -36,13 +36,13 @@ public class FXSelectionAssist {
 			
 			setFill(color.deriveColor(1, 1, 1, 3.5));
 			setStroke(color);
-			setStrokeWidth(2);
+			setStrokeWidth(1);
 			setRadius(0);
 			setCenterX(x);
 			setCenterY(y);
 			
 			parent.getChildren().add(0,this);
-			Duration duration = Duration.millis(500);
+			Duration duration = Duration.millis(300);
 
 			ScaleTransition scale = new ScaleTransition(duration, this);
 			FadeTransition fade = new FadeTransition(duration, this);
@@ -51,8 +51,8 @@ public class FXSelectionAssist {
 			
 			scale.setFromX(0);
 			scale.setFromY(0);
-			scale.setToX(26);
-			scale.setToY(26);
+			scale.setToX(40);
+			scale.setToY(40);
 			fade.setFromValue(0.8);
 			fade.setToValue(0);
 		}

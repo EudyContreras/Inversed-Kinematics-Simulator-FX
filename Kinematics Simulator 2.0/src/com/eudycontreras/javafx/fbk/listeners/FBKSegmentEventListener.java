@@ -26,6 +26,10 @@ public interface FBKSegmentEventListener {
 	
 	public void onSegmentStatusChange(FBKSegment segment, FBKSegmentStatus status);
 	
+	public void onSegmentChildAdded(FBKSegment segment, FBKSegment child);
+	
+	public void onSegmentChildRemoved(FBKSegment segment, FBKSegment child);
+	
 	public void onAngleChanged(FBKSegment segment, double angle);
 
 	public void onPositionUpdate(FBKSegment segment, FBKVector headPoint, FBKVector tailPoint, double angle, double rotation, double length);

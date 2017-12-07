@@ -221,16 +221,7 @@ public class FBKVector {
 	}
 
 	public double getAngle(FBKVector other) {
-
-		double angle = Math.toDegrees(Math.atan2(other.getY() - getY(), other.getX() - getX()));
-		
-		if (angle < 0) {
-			angle += 360;
-		} else if (angle > 360) {
-			angle -= 360;
-		}
-
-		return angle;
+		return getAngle(this,other);
 	}
 
 	public static double getAngle(FBKVector start, FBKVector end) {

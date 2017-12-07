@@ -1,7 +1,7 @@
 package com.eudycontreras.components.visuals;
 
-import com.eudycontreras.components.assist.FXSelectionAssist;
-import com.eudycontreras.components.assist.FXSelectionAssist.PulseMarker;
+import com.eudycontreras.components.helpers.FXSelectionAssist;
+import com.eudycontreras.components.helpers.FXSelectionAssist.PulseMarker;
 
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
@@ -288,7 +288,7 @@ public abstract class FXJointView implements IFXJointView{
 
 		@Override
 		public void setSelected(boolean selected) {
-			ScaleTransition scale = new ScaleTransition(Duration.millis(250), merger);
+			ScaleTransition scale = new ScaleTransition(Duration.millis(50), merger);
 			
 			ParallelTransition parallel = new ParallelTransition(merger, scale);
 	
