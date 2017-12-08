@@ -115,7 +115,7 @@
 }
 .tab .tab-label {
     -fx-alignment: CENTER;
-    -fx-text-fill: rgb(70, 70,70);
+    -fx-text-fill: rgb(50, 140, 170);
     -fx-font-size: 12px;
     -fx-font-weight: bold;
 }

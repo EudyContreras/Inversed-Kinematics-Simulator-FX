@@ -35,7 +35,7 @@ public class FXBone{
 	
 	private void setUpView(){
 		boneView.setStrokeWidth(1);
-		boneView.setFill(boneColorNormal.deriveColor(1,1,1, 0.55));
+		boneView.setFill(boneColorNormal.deriveColor(1,1,1, 0.35));
 		boneView.setStroke(boneColorNormal);
 	}
 
@@ -58,11 +58,11 @@ public class FXBone{
 	
 	public void setSelected(boolean selected){
 		if(selected){
-			boneView.setFill(boneColorSelected.deriveColor(1,1,1,0.55));
+			boneView.setFill(boneColorSelected.deriveColor(1,1,1,0.45));
 			boneView.setStroke(boneColorSelected);
 			
 		}else{
-			boneView.setFill(boneColorNormal.deriveColor(1,1,1,0.55));
+			boneView.setFill(boneColorNormal.deriveColor(1,1,1,0.35));
 			boneView.setStroke(boneColorNormal);		
 		}
 	}
@@ -147,10 +147,13 @@ public class FXBone{
 			if(segment.getAllDescendants().stream().anyMatch(s -> s.isConstrained())){
 				return;
 			}
-			segment.setKinematicsType(FBKinematicsType.INVERSED);
 			if(!segment.getLastState().isConstrained()){
 				segment.setConstrained(false);
+				System.out.println("CO");
+			}else{
+				System.out.println("UN");
 			}
+			segment.setKinematicsType(FBKinematicsType.INVERSED);
 			
 		}
 		if(segment.isLocked()){

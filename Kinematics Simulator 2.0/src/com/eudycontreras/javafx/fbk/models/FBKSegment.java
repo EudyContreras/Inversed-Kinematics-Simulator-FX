@@ -72,9 +72,6 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	public static final double MAX_ANGLE = 180.0d;
 
 	private double length = DEFAULT_LENGHT;
-	
-	private double minAngle = MIN_ANGLE;
-	private double maxAngle = MAX_ANGLE;
 
 	private final int segmentId;
 
@@ -92,9 +89,12 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	
 	private FBKinematicsType kinematicsType = FBKinematicsType.INVERSED;
 	
-	private final FBKRotationConstraint angleConstraint = new FBKRotationConstraint(maxAngle,minAngle);
-	private final FBKRotationConstraint angleConstraintMain = new FBKRotationConstraint(maxAngle,minAngle);
-	private final FBKRotationConstraint angleConstraintMemory = new FBKRotationConstraint(maxAngle,minAngle);
+	private final PrivateDoubleProperty minAngle = new PrivateDoubleProperty(MIN_ANGLE,"min-angle-prop");
+	private final PrivateDoubleProperty maxAngle = new PrivateDoubleProperty(MAX_ANGLE,"max-angle-prop");
+	
+	private final FBKRotationConstraint angleConstraint = new FBKRotationConstraint(maxAngle.get(),minAngle.get());
+	private final FBKRotationConstraint angleConstraintMain = new FBKRotationConstraint(maxAngle.get(),minAngle.get());
+	private final FBKRotationConstraint angleConstraintMemory = new FBKRotationConstraint(maxAngle.get(),minAngle.get());
 	
 	private final FBKSegmentState lastState = new FBKSegmentState();
 
@@ -143,8 +143,8 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	public FBKSegment(FBKVector position, double length, double angle, double minAngle, double maxAngle) {
 		this.segmentId = ID++;
 		this.length = length;
-		this.minAngle = minAngle;
-		this.maxAngle = maxAngle;
+		this.minAngle.set(minAngle);
+		this.maxAngle.set(maxAngle);
 		this.angleConstraintMain.setAngle(angle);
 		this.angleConstraintMain.setMinAngle(minAngle);
 		this.angleConstraintMain.setMaxAngle(maxAngle);
@@ -215,6 +215,10 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 	
 	public final double getMinAngle() {
+		return minAngle.get();
+	}
+	
+	public final PrivateDoubleProperty getMinAngleProperty() {
 		return minAngle;
 	}
 	
@@ -222,15 +226,19 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		if(initiator == null){
 			return angleConstraintMemory.getMinAngle();
 		}
-		return minAngle;
+		return minAngle.get();
 	}
 	
 	public void setMinAngle(double angle){
-		this.minAngle = angle;
+		this.minAngle.set(angle);;
 		//this.angleConstraintMemory.setMinAngle(minAngle);
 	}
 
 	public final double getMaxAngle() {
+		return maxAngle.get();
+	}
+	
+	public final PrivateDoubleProperty getMaxAngleProperty() {
 		return maxAngle;
 	}
 	
@@ -238,11 +246,11 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		if(initiator == null){
 			return angleConstraintMemory.getMaxAngle();
 		}
-		return maxAngle;
+		return maxAngle.get();
 	}
 	
 	public void setMaxAngle(double angle){
-		this.maxAngle = angle;
+		this.maxAngle.set(angle);;
 		//this.angleConstraintMemory.setMaxAngle(maxAngle);	
 	}
 	
@@ -352,6 +360,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 
 	public void setAngle(double angle) {
+		this.lastState.setAngle(this.angle.get());
 		this.angle.set(angle);
 	}
 
@@ -371,46 +380,6 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		setRotation(borderAngle(getParent().getRotation() + getAngle()));
 	}
 
-	public void applyRotationAngle(double angle) {
-
-		if (angle <= (Math.abs(getMinAngle()) - 10) && angle >= -(getMaxAngle() + 10)) {
-
-			double x, y;
-
-			double distance = getLength();
-
-			x = Math.round(getCurrentHead().getX() + (Math.cos(Math.toRadians(angle)) * distance));
-			y = Math.round(getCurrentHead().getY() + (Math.sin(Math.toRadians(angle)) * distance));
-
-			moveTail(x, y);
-		}
-	}
-
-	public void applyRotationAngle(PointType type, double value) {
-
-		double angle = borderAngle(getParent().getRotation() + getAngle()) + value;
-
-		if (angle <= (Math.abs(getMinAngle()) - 10) && angle >= -(getMaxAngle() + 10)) {
-
-			double x, y;
-
-			double distance = length;
-
-			x = Math.round(getCurrentHead().getX() + (Math.cos(Math.toRadians(angle)) * distance));
-			y = Math.round(getCurrentHead().getY() + (Math.sin(Math.toRadians(angle)) * distance));
-
-			switch(type){
-			case START:
-				moveHead(x, y);
-				break;
-			case END:
-				moveTail(x, y);
-			break;
-			}
-		}
-	}
-
-	
 	public boolean isEffector() {
 		return isEffector;
 	}
@@ -540,6 +509,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		if(child == null) return;
 		
 		if(!children.contains(child)){
+			
 			children.add(0,child);
 			
 			if (listener != null) {
@@ -567,6 +537,13 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 					segment.setAbsoluteAncestor(this.getAbsoluteAncestor());
 				});
 			}
+			
+//			if (children.stream().anyMatch(c -> c.isConstrained())){
+//				
+//				children.get(0).setConstrained(false);
+//				children.get(0).setConstrained(true);
+//				System.out.println("SHIT");
+//			}
 		}
 	}
 
@@ -632,9 +609,14 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		}
 	}
 
-	public static boolean siblingsMeetCondition(FBKSegment segment, Predicate<FBKSegment> predicate){
+	public static boolean allSiblingsMeetCondition(FBKSegment segment, Predicate<FBKSegment> predicate){
 		
 		return segment.isAbsoluteAncestor() ? true : segment.getParent().getChildren().stream().allMatch(predicate);
+	}
+	
+	public static boolean anySiblingsMeetCondition(FBKSegment segment, Predicate<FBKSegment> predicate){
+		
+		return segment.isAbsoluteAncestor() ? true : segment.getParent().getChildren().stream().anyMatch(predicate);
 	}
 
 	public static FBKSegment traverseAncestor(FBKSegment segment, FBKSegmentAction action){
@@ -706,6 +688,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 
 	private void applyKinematicsType(FBKinematicsType type, FBKSegment initiator, boolean propagate){
+		this.lastState.setKinematicsType(this.kinematicsType);
 		this.kinematicsType = type;
 		
 		if(listener != null){
@@ -748,11 +731,13 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	
 	public void setLocked(boolean locked, boolean lockChildren) {
 		
+		this.lastState.setLocked(this.locked);
+		
 		if(isLocked()){
 			if(!locked){ 	
 				
-				minAngle = angleConstraintMemory.getMinAngle();
-				maxAngle = angleConstraintMemory.getMaxAngle();
+				minAngle.set(angleConstraintMemory.getMinAngle());;
+				maxAngle.set(angleConstraintMemory.getMaxAngle());;
 				
 				this.locked = false;
 				
@@ -772,6 +757,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			}
 		}else{
 			if(locked){
+				
 				computateAngleConstraints();
 				
 				this.locked = true;
@@ -837,6 +823,10 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 	}
 	
 	public void setConstrained(boolean constrained, FBKConstraintPivot constraintPivot) {
+		setConstrained(constrained, constraintPivot, true);
+	}
+	
+	public void setConstrained(boolean constrained, FBKConstraintPivot constraintPivot, boolean constraintSiblings) {
 		this.lastState.setConstrained(this.constrained);
 		this.lastState.setConstraintPivot(this.constraintPivot);
 		this.constraintPivot = constraintPivot;
@@ -848,7 +838,12 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			}else{
 				listener.onSegmentUnconstrained(this);
 			}
-		}		
+		}	
+		
+		saveCoordinates();
+		
+		if(!constraintSiblings) return;
+		
 		traverseSiblings(this, segment->{
 			segment.lastState.setConstrained(segment.constrained);
 			segment.lastState.setConstraintPivot(segment.constraintPivot);
@@ -863,8 +858,6 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			}
 			segment.saveCoordinates();
 		});
-		
-		saveCoordinates();
 	}
 
 	private void enforseDescendantConstraint(FBKSegment initiator) {
@@ -1341,13 +1334,53 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			}
 		}
 	};
+	
+	public void applyRotationAngle(double angle) {
+
+		if (angle <= (Math.abs(getMinAngle()) - 10) && angle >= -(getMaxAngle() + 10)) {
+
+			double x, y;
+
+			double distance = getLength();
+
+			x = Math.round(getCurrentHead().getX() + (Math.cos(Math.toRadians(angle)) * distance));
+			y = Math.round(getCurrentHead().getY() + (Math.sin(Math.toRadians(angle)) * distance));
+
+			moveTail(x, y);
+		}
+	}
+
+	public void applyRotationAngle(PointType type, double value) {
+
+		double angle = borderAngle(getParent().getRotation() + getAngle()) + value;
+
+		if (angle <= (Math.abs(getMinAngle()) - 10) && angle >= -(getMaxAngle() + 10)) {
+
+			double x, y;
+
+			double distance = length;
+
+			x = Math.round(getCurrentHead().getX() + (Math.cos(Math.toRadians(angle)) * distance));
+			y = Math.round(getCurrentHead().getY() + (Math.sin(Math.toRadians(angle)) * distance));
+
+			switch(type){
+			case START:
+				moveHead(x, y);
+				break;
+			case END:
+				moveTail(x, y);
+			break;
+			}
+		}
+	}
 
 	private void updateChildren(FBKSegment initiator) {
 		FBKIterator.Iterate(getChildren(), childUpdateIterator, initiator);
 	}
 
+	@SuppressWarnings("unused")
 	private boolean withinRange(double angle) {
-		return (angle >= minAngle) && (angle <= maxAngle);
+		return (angle >= minAngle.get()) && (angle <= maxAngle.get());
 	}
 	
 	private boolean withinRange(double minAngle, double maxAngle) {
@@ -1528,20 +1561,27 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		
 		private FBKinematicsType kinematicsType = FBKinematicsType.INVERSED;
 
+		public double getAngle() {
+			return angle;
+		}
+
+		private void setAngle(double angle) {
+			this.angle = angle;
+		}
+
 		public boolean isLocked() {
 			return locked;
 		}
 
-		public void setLocked(boolean locked) {
+		private void setLocked(boolean locked) {
 			this.locked = locked;
 		}
-
 		
 		public boolean isEffector() {
 			return effector;
 		}
 
-		public void setEffector(boolean effector) {
+		private void setEffector(boolean effector) {
 			this.effector = effector;
 		}
 
@@ -1549,7 +1589,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			return constrained;
 		}
 
-		public void setConstrained(boolean constrained) {
+		private void setConstrained(boolean constrained) {
 			this.constrained = constrained;
 		}
 
@@ -1557,7 +1597,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			return headPoint;
 		}
 
-		public void setHeadPoint(FBKVector headPoint) {
+		private void setHeadPoint(FBKVector headPoint) {
 			this.headPoint = headPoint;
 		}
 
@@ -1565,7 +1605,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			return tailPoint;
 		}
 
-		public void setTailPoint(FBKVector tailPoint) {
+		private void setTailPoint(FBKVector tailPoint) {
 			this.tailPoint = tailPoint;
 		}
 
@@ -1573,7 +1613,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			return constraintPivot;
 		}
 
-		public void setConstraintPivot(FBKConstraintPivot constraintPivot) {
+		private void setConstraintPivot(FBKConstraintPivot constraintPivot) {
 			this.constraintPivot = constraintPivot;
 		}
 
@@ -1581,7 +1621,7 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 			return kinematicsType;
 		}
 
-		public void setKinematicsType(FBKinematicsType kinematicsType) {
+		private void setKinematicsType(FBKinematicsType kinematicsType) {
 			this.kinematicsType = kinematicsType;
 		}
 	}
@@ -1696,13 +1736,26 @@ public class FBKSegment  implements Comparable<FBKSegment>{
 		}	
 	}
 
-	private class PrivateDoubleProperty extends ReadOnlyDoublePropertyBase {
+	public class PrivateDoubleProperty extends ReadOnlyDoublePropertyBase {
 
-		private final String name;
+		private String name;
 		private double value;
 
+		private PrivateDoubleProperty() {
+			this(0.0d,"DEFAULT_DOUBLE_PROPERTY");
+		}
+		
 		private PrivateDoubleProperty(String name) {
+			this(0.0d, name);
+		}
+		
+		private PrivateDoubleProperty(double value) {
+			this(value,"DEFAULT_DOUBLE_PROPERTY");
+		}
+		
+		private PrivateDoubleProperty(double value, String name) {
 			this.name = name;
+			this.set(value);
 		}
 
 		@Override

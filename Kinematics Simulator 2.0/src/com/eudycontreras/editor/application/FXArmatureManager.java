@@ -15,9 +15,12 @@ import com.eudycontreras.components.visuals.IFXJointView;
 import com.eudycontreras.editor.gestures.FXEditorGestures;
 import com.eudycontreras.javafx.fbk.listeners.FBKSegmentEventListener.FBKSegmentStatus;
 import com.eudycontreras.javafx.fbk.models.FBKSegment;
+import com.eudycontreras.javafx.fbk.models.FBKSegment.FBKConstraintPivot;
 import com.eudycontreras.javafx.fbk.models.FBKSegmentChain;
 import com.eudycontreras.javafx.fbk.models.FBKVector;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
@@ -37,11 +40,12 @@ public class FXArmatureManager {
 	
 	private double jointRadius = 8;
 	private double boneLenght = 100;
-	private double boneDensity = 12;
+	private double boneDensity = 16;
 	
 	private Stage stage;
 	private Scene scene;
 	
+	private FXEditor editor;
 	private FXJoint currentJoint = null;
 	
 	private FXEditorGestures gestureHandler;
@@ -51,9 +55,10 @@ public class FXArmatureManager {
 	private final ArrayList<FXJoint> joints = new ArrayList<>();
 
 	
-	public FXArmatureManager(Stage stage, Scene scene, double width, double height, FXEditorGestures gestureHandler){
+	public FXArmatureManager(FXEditor editor, Stage stage, Scene scene, double width, double height, FXEditorGestures gestureHandler){
 		this.stage = stage;
 		this.scene = scene;
+		this.editor = editor;
 		this.gestureHandler = gestureHandler;
 		this.skeleton.setTranslateX(width / 2);
 		this.skeleton.setTranslateY(height / 2);
@@ -147,8 +152,29 @@ public class FXArmatureManager {
 		return skeleton;
 	}
 	
+	private final ChangeListener<Number> changeListener = (obs, oldVal, newVal)->{
+		System.out.println(newVal);
+		editor.getSliderDemo().setMaxValue(newVal.doubleValue());
+	};
+	
 	public void setCurrentJoint(FXJoint joint){
-		this.currentJoint = joint;
+		if(currentJoint != null){
+			//editor.getSliderDemo().getMinValueProperty().unbindBidirectional(currentJoint.getSegment().getMinAngleProperty());
+		//	editor.getSliderDemo().getMaxValueProperty().bind(currentJoint.getSegment().angleProperty());
+			if(currentJoint.getSegment().hasAncestor())
+			this.currentJoint.getSegment().getParent().angleProperty().removeListener(changeListener);;
+			this.currentJoint = joint;
+			if(currentJoint.getSegment().hasAncestor())
+			this.currentJoint.getSegment().getParent().angleProperty().addListener(changeListener);
+			//editor.getSliderDemo().getMinValueProperty().bindBidirectional(currentJoint.getSegment().getMinAngleProperty());
+		//	editor.getSliderDemo().getMaxValueProperty().bind(currentJoint.getSegment().angleProperty());
+		}else{
+			this.currentJoint = joint;
+			if(currentJoint.getSegment().hasAncestor())
+			this.currentJoint.getSegment().getParent().angleProperty().addListener(changeListener);
+			//editor.getSliderDemo().getMinValueProperty().bindBidirectional(currentJoint.getSegment().getMinAngleProperty());
+			//editor.getSliderDemo().getMaxValueProperty().bind(currentJoint.getSegment().angleProperty());
+		}
 	}
 	
 	public FXJoint getCurrentJoint(){
@@ -186,10 +212,6 @@ public class FXArmatureManager {
 			
 			double angle = getAngle(FBKVector.toVector(start),FBKVector.toVector(end));
 
-			System.out.println(angle);
-		
-			System.out.println(child.getAngle());
-			
 			parentJoint.getSegment().getParent().addChild(child.getSegment());
 			
 			child.getSegment().moveHead(parentJoint.getSegment().getCurrentHead());
@@ -201,10 +223,16 @@ public class FXArmatureManager {
 			child.getSegment().applyRotationAngle(angle);
 			
 			FBKSegment.traverseDescendants(child.getSegment(), s-> {
-				s.setLocked(false, false);
+				if(!s.getLastState().isLocked()){
+					s.setLocked(false, false);
+				}
 			});
 			
 			child.setShowJoint(false);
+			
+			if(FBKSegment.anySiblingsMeetCondition(parentJoint.getSegment(), c -> c.isConstrained())){
+				child.getSegment().setConstrained(true, FBKConstraintPivot.HEAD, true);
+			}
 		}else{
 			
 //			parentJoint.getSegment().addChild(child.getSegment());
@@ -241,6 +269,9 @@ public class FXArmatureManager {
 				child.moveTail(point);
 				child.computeFBK();
 				
+				if(parentJoint.getSegment().isConstrained()){
+					parentJoint.getSegment().setConstrained(false);
+				}
 				appendJoint(addGraphicalContent(skeleton, child, getJoint(jointRadius), getBone(child), false), child.getCurrentTail(), newEffector);
 			}
 			

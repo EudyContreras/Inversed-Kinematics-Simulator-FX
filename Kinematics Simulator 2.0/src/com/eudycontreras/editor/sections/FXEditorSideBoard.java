@@ -53,6 +53,10 @@ public class FXEditorSideBoard {
 		layout.getChildren().add(rect);
 	
 	}
+	
+	public FXRangeSlider getSlider(){
+		return rect.getSliderDemo();
+	}
 
 	private ChangeListener<Number> dragTranslation(FXEditor editor) {
 
@@ -106,7 +110,13 @@ public class FXEditorSideBoard {
 			getStylesheets().add(Styles.styledToolBarCss);
 			setId(id);
 		}
+		
+		public FXRangeSlider getSliderDemo(){
+			return sideEditorTools.getSlider();
+		}
 	}
+	
+
 
 	private Node createSearchBar(){
         //Controls to be added to the HBox

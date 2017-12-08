@@ -129,9 +129,11 @@ public class FXJoint implements FXSubject<FXJoint> {
 
 			@Override
 			public void onSegmentConstrained(FBKSegment segment) {
-				if(FBKSegment.siblingsMeetCondition(segment, s-> s.getKinematicsType() != FBKinematicsType.FORWARD)){
+				if(FBKSegment.allSiblingsMeetCondition(segment, s-> s.getKinematicsType() != FBKinematicsType.FORWARD)){
 					if(!resizingSegment){
-						jointView.setMainColor(colorConstrained);
+						if(segment.getKinematicsType() != FBKinematicsType.FORWARD){
+							jointView.setMainColor(colorConstrained);
+						}
 						if(isLeafJoint()){
 							jointView.setCenterColor(colorConstrained.deriveColor(1, 1, 1, 0.45));
 						}
@@ -268,12 +270,12 @@ public class FXJoint implements FXSubject<FXJoint> {
 		
 		if(!chainingReady){
 			chainingReady = true;
-			stroke.setShape(jointView.getShape());
-			stroke.setFromValue(((Color)jointView.getShape().getFill()));
-			stroke.setToValue(Color.TRANSPARENT);
-			stroke.setCycleCount(Transition.INDEFINITE);
-			stroke.setAutoReverse(true);
-			stroke.play();
+//			stroke.setShape(jointView.getShape());
+//			stroke.setFromValue(((Color)jointView.getShape().getFill()));
+//			stroke.setToValue(Color.TRANSPARENT);
+//			stroke.setCycleCount(Transition.INDEFINITE);
+//			stroke.setAutoReverse(true);
+//			stroke.play();
 			
 			scale.setNode(jointView.getNode());
 			scale.setCycleCount(Transition.INDEFINITE);
@@ -285,11 +287,11 @@ public class FXJoint implements FXSubject<FXJoint> {
 			scale.play();
 		}else{
 			chainingReady = false;	
-			stroke.setShape(jointView.getShape());
-			stroke.setFromValue(((Color)jointView.getShape().getFill()));
-			stroke.setToValue(colorNormal.deriveColor(1, 1, 1, 0.6));
-			stroke.play();
-			
+//			stroke.setShape(jointView.getShape());
+//			stroke.setFromValue(((Color)jointView.getShape().getFill()));
+//			stroke.setToValue(((Color)jointView.getShape().getFill()).deriveColor(1, 1, 1, 0.6));
+//			stroke.play();
+//			
 			scale.setNode(jointView.getNode());
 			scale.setFromX(1.7);
 			scale.setFromY(1.7);
@@ -334,16 +336,12 @@ public class FXJoint implements FXSubject<FXJoint> {
 		jointView.getNode().setOnMousePressed(e -> {
 		
 			jointView.getNode().getScene().setCursor(Cursor.CLOSED_HAND);	
-			
-			applySelectEffeect();
-			
+		
 			e.consume();
 		});
 
 		jointView.getNode().setOnMouseReleased(e -> {	
-			
-			applyUnselectEffect();
-			
+	
 			if(resizingSegment){
 				finishResize();
 			}else{
@@ -414,7 +412,7 @@ public class FXJoint implements FXSubject<FXJoint> {
 		});
 
 		jointView.getNode().setOnDragDetected(e -> {
-			applyUnselectEffect();
+			//applyUnselectEffect();
 			
 			if (e.isControlDown()) {
 	
@@ -468,7 +466,11 @@ public class FXJoint implements FXSubject<FXJoint> {
 		if(segment.isLocked()){
 			jointView.setStroke(colorLocked);
 		}else if(segment.isConstrained()){
-			jointView.setStroke(colorConstrained);
+			if(resizingSegment){
+				jointView.setStroke(colorNormal);
+			}else{
+				jointView.setStroke(colorConstrained);
+			}
 		}else{
 			jointView.setStroke(colorNormal);
 		}
@@ -597,8 +599,6 @@ public class FXJoint implements FXSubject<FXJoint> {
 	}
 
 	private void performChaining(FXJoint collision) {
-		System.out.println("MERGING");
-		
 		armature.appendChain(collision, this);
 	}
 
@@ -651,6 +651,11 @@ public class FXJoint implements FXSubject<FXJoint> {
 
 		double distance = start.distance(point);
 		
+		if(!segment.hasChildren()){
+			segment.moveHead(FBKVector.toVector(point));
+			
+			return;
+		}
 		if(!resizingSegment){		
 			resizingSegment = true;
 			
@@ -730,6 +735,10 @@ public class FXJoint implements FXSubject<FXJoint> {
 		if(segment.hasAncestor()){
 			if(segment.hasChildren()){
 				segment.clearDescendants();		
+			}else{
+				segment.getContent().clear();
+				segment.getParent().setLength(0);
+				segment.getParent().removeChild(segment);
 			}
 		}else{
 			if(segment.hasChildren()){

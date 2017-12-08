@@ -8,6 +8,8 @@ import com.eudycontreras.editor.application.FXPaintResources;
 import com.eudycontreras.utilities.FXKinematicsUtility;
 import com.eudycontreras.utilities.FXPaintUtility;
 
+import javafx.animation.FillTransition;
+import javafx.animation.ScaleTransition;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -30,6 +32,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.util.Duration;
 
 public class FXRangeSlider{
 	
@@ -72,6 +75,9 @@ public class FXRangeSlider{
 	
 	private double width = 0;
 	private double height = 0;
+	
+	private boolean directMapping = true;
+	private boolean active = false;
 	
 	private FXRangeSliderType sliderType = FXRangeSliderType.HORIZONTAL;
 
@@ -196,51 +202,61 @@ public class FXRangeSlider{
 		this.component.getChildren().add(maxValueText);
 		this.component.setPadding(new Insets(0,0,2,0));
 		
-		this.sliderFrame.setHeight(sliderFrame.getHeight()*1.65);
-		this.sliderFrame.setWidth(sliderFrame.getWidth()*1.5);
-		this.sliderFrame.setFill(FXPaintUtility.color(30));
-	  	this.sliderFrame.setStroke(FXPaintUtility.color(15));
-	  	this.sliderFrame.setStrokeWidth(0);
+		this.sliderFrame.setArcWidth(sliderFrame.getHeight()*0.2);
+	  	this.sliderFrame.setArcHeight(sliderFrame.getHeight()*0.2);
+		this.sliderFrame.setHeight(sliderFrame.getHeight()*2.85);
+		this.sliderFrame.setWidth(sliderFrame.getWidth()*1.6);
+		this.sliderFrame.setFill(FXPaintUtility.color(27));
+	  	this.sliderFrame.setStroke(FXPaintUtility.color(22));
+	  	this.sliderFrame.setStrokeWidth(1);
 	  	
 		this.wrapper.getChildren().add(sliderFrame);
 		this.wrapper.getChildren().add(sliderTrack);
 		this.wrapper.getChildren().add(component);
 		
-		this.wrapper.setPadding(new Insets(20,20,20,20));
+		this.wrapper.setPadding(new Insets(20,8,20,8));
 	}
 	
 	private void addEventHandling() {
 
-		thumbRight.setOnMousePressed(e -> {
+		thumbRight.setOnMousePressed(e -> {		
+			addSelectAnimation(thumbRight);
+			directMapping = false;
+			active = true;
 			thumbRightDelta.x = thumbRight.getTranslateX() - e.getSceneX();
 			thumbRight.toFront();
 			thumbRight.setStroke(rangeIndicatorColorActive);
 			thumbLeft.setStroke(rangeIndicatorColorActive);
-			rangeIndicator.setFill(rangeIndicatorColorActive);
 		});
 		
 		thumbLeft.setOnMousePressed(e -> {
+			addSelectAnimation(thumbLeft);
+			directMapping = false;
+			active = true;
 			thumbLeftDelta.x = thumbLeft.getTranslateX() - e.getSceneX();
 			thumbLeft.toFront();
 			thumbRight.setStroke(rangeIndicatorColorActive);
 			thumbLeft.setStroke(rangeIndicatorColorActive);
-			rangeIndicator.setFill(rangeIndicatorColorActive);
 		});
 		
 		thumbRight.setOnMouseReleased(e -> {
+			removeSelectAnimation(thumbRight);
+			directMapping = true;
+			active = false;
 			thumbRightDelta.x = thumbRight.getTranslateX() - e.getSceneX();
 			thumbRight.toFront();
 			thumbRight.setStroke(rangeIndicatorColor);
-			thumbLeft.setStroke(rangeIndicatorColor);
-			rangeIndicator.setFill(rangeIndicatorColor);
+			thumbLeft.setStroke(rangeIndicatorColor);	
 		});
 		
 		thumbLeft.setOnMouseReleased(e -> {
+			removeSelectAnimation(thumbLeft);
+			directMapping = true;
+			active = false;
 			thumbLeftDelta.x = thumbLeft.getTranslateX() - e.getSceneX();
 			thumbLeft.toFront();
 			thumbRight.setStroke(rangeIndicatorColor);
 			thumbLeft.setStroke(rangeIndicatorColor);
-			rangeIndicator.setFill(rangeIndicatorColor);
 		});
 
 		thumbRight.setOnMouseDragged(e -> {
@@ -289,6 +305,8 @@ public class FXRangeSlider{
 	private void addConverters() {
 		thumbLeft.translateXProperty().addListener((osv, oldVal, newVal) -> {
 
+			if(directMapping) return;
+			
 			double value = newVal.doubleValue();
 
 			double minBounds = -(sliderTrack.getLayoutBounds().getWidth() / 2) + 4;
@@ -311,11 +329,12 @@ public class FXRangeSlider{
 			}
 					
 			minValueText.setText(formatter.format(mappedValue)+""+DEGREE);
-			System.out.println("Thumb Left: " + (int)mappedValue);
 		});
 		
 		thumbRight.translateXProperty().addListener((osv, oldVal, newVal) -> {
 
+			if(directMapping) return;
+			
 			double value = newVal.doubleValue();
 
 			double minBounds = -(sliderTrack.getLayoutBounds().getWidth() / 2) + 4;
@@ -338,7 +357,23 @@ public class FXRangeSlider{
 			}
 			
 			maxValueText.setText(formatter.format(mappedValue)+""+DEGREE);
-			System.out.println("Thumb Right: " + (int)mappedValue);
+		
+		});
+		
+		minValue.addListener((obs, oldVal, newVal)-> {
+			//System.out.println(newVal.doubleValue());
+			
+//			if(directMapping){
+//				setMinValue(newVal.doubleValue());
+//			}
+		});
+		
+		maxValue.addListener((obs, oldVal, newVal)-> {
+			//System.out.println(newVal.doubleValue());
+			
+			if(directMapping){
+				setMaxValue(newVal.doubleValue());
+			}
 		});
 	}
 	
@@ -373,6 +408,8 @@ public class FXRangeSlider{
 		if(thumbLeft.getTranslateX() > thumbRight.getTranslateX()){
 			thumbRight.setTranslateX(thumbLeft.getTranslateX());
 		}
+		
+		minValueText.setText(formatter.format(minValue)+""+DEGREE);
 	}
 
 	public void setMaxValue(double maxValue) {
@@ -406,6 +443,42 @@ public class FXRangeSlider{
 		if(thumbRight.getTranslateX() < thumbLeft.getTranslateX()){
 			thumbLeft.setTranslateX(thumbRight.getTranslateX());
 		}
+		
+		maxValueText.setText(formatter.format(maxValue)+""+DEGREE);
+		rangeIndicator.setTranslateX(thumbLeft.getTranslateX());
+		rangeIndicator.setWidth(distanceBetween(thumbLeft.getTranslateX(),thumbRight.getTranslateX()));
+	}
+	
+	private void addSelectAnimation(Circle circle)	{
+		
+		FillTransition fill = new FillTransition(Duration.millis(150),rangeIndicator);
+		ScaleTransition scale = new ScaleTransition(Duration.millis(150),circle);
+		
+		scale.setFromX(circle.getScaleX());
+		scale.setFromY(circle.getScaleY());
+		scale.setToX(1.2);
+		scale.setToY(1.2);
+		scale.play();
+		
+		fill.setFromValue(rangeIndicatorColor);
+		fill.setToValue(rangeIndicatorColorActive);
+		fill.play();
+	}
+		
+	private void removeSelectAnimation(Circle circle)	{
+
+		FillTransition fill = new FillTransition(Duration.millis(150),rangeIndicator);
+		ScaleTransition scale = new ScaleTransition(Duration.millis(150),circle);
+		
+		scale.setFromX(circle.getScaleX());
+		scale.setFromY(circle.getScaleY());
+		scale.setToX(1);
+		scale.setToY(1);
+		scale.play();
+		
+		fill.setFromValue(rangeIndicatorColorActive);
+		fill.setToValue(rangeIndicatorColor);
+		fill.play();
 	}
 	
 	public void addChangeListener(FXRangeSliderChangeListener changeListener) {

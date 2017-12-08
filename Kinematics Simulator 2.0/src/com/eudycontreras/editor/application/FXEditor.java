@@ -1,5 +1,6 @@
 package com.eudycontreras.editor.application;
 
+import com.eudycontreras.editor.controls.FXRangeSlider;
 import com.eudycontreras.editor.controls.FXZoomSlider;
 import com.eudycontreras.editor.elements.FXBaseIndicator;
 import com.eudycontreras.editor.elements.FXEditorGrid;
@@ -37,6 +38,8 @@ public class FXEditor{
 	private FXEditorWindow mainWindow = new FXEditorWindow();
 	private FXEditorWindow workWindow = new FXEditorWindow();
 	
+	private FXEditorSideBoard sideBoard;
+	
 	private FXArmatureManager armature;
 	
 	private BorderPane layoutWindow = new BorderPane();
@@ -65,7 +68,6 @@ public class FXEditor{
 		FXZoomSlider zoomSlider = new FXZoomSlider(1, FXEditorGestures.MAX_SCALE, FXEditorGestures.MIN_SCALE);
 		FXEditorGrid editorGrid = new FXEditorGrid(width, height, 20, Color.rgb(50, 50, 50), Color.rgb(80, 80, 80));
 		FXBaseIndicator indicator = new FXBaseIndicator(new Size(width,height),null,3);
-		FXEditorSideBoard sideBoard = new FXEditorSideBoard(this);
 		FXEditorViewport viewPort = new FXEditorViewport(this);
 		FXEditorToolbar toolbar = new FXEditorToolbar(this);
 		FXEditorFooter footer = new FXEditorFooter(this);
@@ -73,10 +75,12 @@ public class FXEditor{
 		zoomSlider.setTranslateX(28);
 		viewPort.addElement(zoomSlider);
 
+		
 		gestureHandler = new FXEditorGestures(this, scene, workWindow, zoomSlider);
 		gestureHandler.addPannableContent(scene, workWindow, zoomSlider);
-		armature = new FXArmatureManager(stage,scene,workWindow.getWidth(), workWindow.getHeight(),gestureHandler);
+		sideBoard = new FXEditorSideBoard(this);
 		
+		armature = new FXArmatureManager(this,stage,scene,workWindow.getWidth(), workWindow.getHeight(),gestureHandler);
 		
 		layoutWindow.setCenter(viewPort.get());
 		layoutWindow.setRight(sideBoard.get());
@@ -114,6 +118,9 @@ public class FXEditor{
 		
 	}
 	
+	public FXRangeSlider getSliderDemo(){
+		return sideBoard.getSlider();
+	}
 
 	public void log(Object obj) {
 		System.out.println(obj);
