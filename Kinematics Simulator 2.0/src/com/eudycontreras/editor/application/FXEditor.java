@@ -13,11 +13,16 @@ import com.eudycontreras.editor.sections.FXEditorToolbar;
 import com.eudycontreras.editor.sections.FXEditorViewport;
 import com.eudycontreras.editor.sections.FXEditorWindow;
 import com.eudycontreras.models.Size;
+import com.eudycontreras.threading.ThreadManager;
+import com.eudycontreras.threading.TimeSpan;
 import com.eudycontreras.utilities.FXPaintUtility;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.scene.CacheHint;
 import javafx.scene.Scene;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -64,7 +69,9 @@ public class FXEditor{
 		workWindow.setPrefSize(width,height);
 		workWindow.setTranslateX(-(inputWidth+(inputWidth/2)));
 		workWindow.setTranslateY(-(inputHeight+(inputHeight/2)));
-
+//		workWindow.setCache(true);
+//		workWindow.setCacheHint(CacheHint.SPEED);
+		
 		FXZoomSlider zoomSlider = new FXZoomSlider(1, FXEditorGestures.MAX_SCALE, FXEditorGestures.MIN_SCALE);
 		FXEditorGrid editorGrid = new FXEditorGrid(width, height, 20, Color.rgb(50, 50, 50), Color.rgb(80, 80, 80));
 		FXBaseIndicator indicator = new FXBaseIndicator(new Size(width,height),null,3);
@@ -74,7 +81,6 @@ public class FXEditor{
 		
 		zoomSlider.setTranslateX(28);
 		viewPort.addElement(zoomSlider);
-
 		
 		gestureHandler = new FXEditorGestures(this, scene, workWindow, zoomSlider);
 		gestureHandler.addPannableContent(scene, workWindow, zoomSlider);
@@ -90,16 +96,21 @@ public class FXEditor{
 		
 		layoutWindow.prefWidthProperty().bind(scene.widthProperty());
 		layoutWindow.prefHeightProperty().bind(scene.heightProperty());
-		
-		Platform.runLater(new Runnable() {
-			  @Override public void run() {
-				  workWindow.getChildren().add(0,editorGrid.get());   
-			  }
-			});
-		
-		workWindow.getChildren().add(indicator);
-		
-		rootWindow.getChildren().add(workWindow);
+
+		ThreadManager.performTasks(TimeSpan.seconds(0), 
+				()->{
+					editorGrid.show();
+					indicator.show();
+			}, 
+				()-> {
+					Platform.runLater(() -> {
+						workWindow.getChildren().add(editorGrid.get());
+						workWindow.getChildren().add(indicator.get());
+						workWindow.getChildren().add(armature.getSkeleton());
+						rootWindow.getChildren().add(0, workWindow);
+					});
+		});
+
 		rootWindow.getChildren().add(mainWindow);
 		rootWindow.getChildren().add(layoutWindow);
 
@@ -114,7 +125,6 @@ public class FXEditor{
 		stage.setHeight(inputHeight);
 		stage.show();
 		
-		workWindow.getChildren().add(armature.getSkeleton());
 		
 	}
 	

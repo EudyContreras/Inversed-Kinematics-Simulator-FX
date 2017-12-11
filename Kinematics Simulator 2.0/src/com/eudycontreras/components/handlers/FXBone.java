@@ -149,9 +149,8 @@ public class FXBone{
 			}
 			if(!segment.getLastState().isConstrained()){
 				segment.setConstrained(false);
-				System.out.println("CO");
 			}else{
-				System.out.println("UN");
+		
 			}
 			segment.setKinematicsType(FBKinematicsType.INVERSED);
 			

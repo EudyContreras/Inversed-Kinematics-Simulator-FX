@@ -363,9 +363,9 @@ public class FXRangeSlider{
 		minValue.addListener((obs, oldVal, newVal)-> {
 			//System.out.println(newVal.doubleValue());
 			
-//			if(directMapping){
-//				setMinValue(newVal.doubleValue());
-//			}
+			if(directMapping){
+				setMinValue(newVal.doubleValue());
+			}
 		});
 		
 		maxValue.addListener((obs, oldVal, newVal)-> {

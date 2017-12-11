@@ -1,5 +1,6 @@
 package com.eudycontreras.editor.elements;
 
+import javafx.animation.FadeTransition;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
@@ -8,6 +9,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 public class FXEditorGrid{
 
@@ -33,7 +35,7 @@ public class FXEditorGrid{
 		this.grid.setHeight(height);
 		
 		this.grid.setMouseTransparent(true);
-    
+		this.grid.setOpacity(0);
         drawGrid(grid);
 	}
 	
@@ -77,6 +79,14 @@ public class FXEditorGrid{
 		overlay.setCacheHint(CacheHint.SPEED);
 		
 		return overlay;
+	}
+	
+	public void show(){
+		FadeTransition transition = new FadeTransition(Duration.millis(1000),grid);
+		transition.setDelay(Duration.millis(1000));
+		transition.setFromValue(0);
+		transition.setToValue(1);
+		transition.play();
 	}
 
 	

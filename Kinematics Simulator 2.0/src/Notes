@@ -10,3 +10,6 @@ Joint Adjustment Panel:
  ● Lock and cosntraint check
  
  
+Constraint concept Idea:
+
+	create a pivot base chaining system. All children besides the first one are pivot based.

@@ -6,16 +6,18 @@ import com.eudycontreras.views.FXTriangle;
 import com.eudycontreras.views.FXTriangle.Direction;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
-public class FXBaseIndicator extends Group {
+public class FXBaseIndicator{
 
 	private int colorValue = 0;
 	
@@ -34,6 +36,8 @@ public class FXBaseIndicator extends Group {
 	private Circle dragger;
 	
 	private Group markers;
+	
+	private Group wrapper;
 	
 	private Size size;
 	
@@ -56,6 +60,8 @@ public class FXBaseIndicator extends Group {
 		this.size = size;
 		this.lineWidth = lineWidth;
 
+		this.wrapper = new Group();
+		
 		this.horizontalLine = new Line();
 		this.verticalLine = new Line();
 		this.borderLines = new Rectangle();
@@ -65,7 +71,7 @@ public class FXBaseIndicator extends Group {
 		this.borderLines.setFill(Color.TRANSPARENT);
 		this.borderLines.setStroke(FXPaintResources.SECONDARY_COLOR_DARK);
 		this.borderLines.setStrokeWidth(this.lineWidth*3);
-
+		
 		this.horizontalLine.setStartX(borderLines.getTranslateX());
 		this.horizontalLine.setStartY(borderLines.getTranslateY() + borderLines.getHeight()*0.55);
 
@@ -74,7 +80,9 @@ public class FXBaseIndicator extends Group {
 
 		this.horizontalLine.setStroke(lineColor.deriveColor(1, 1, 1, 0.55));
 		this.horizontalLine.setStrokeWidth(this.lineWidth);
-
+		this.horizontalLine.setScaleX(0);
+		this.horizontalLine.setScaleY(0);
+		
 		this.verticalLine.setStartX(borderLines.getTranslateX() + borderLines.getWidth()/2);
 		this.verticalLine.setStartY(borderLines.getTranslateY());
 
@@ -83,20 +91,48 @@ public class FXBaseIndicator extends Group {
 
 		this.verticalLine.setStroke(lineColor.deriveColor(1, 1, 1, 0.55));
 		this.verticalLine.setStrokeWidth(lineWidth);
+		this.verticalLine.setScaleY(0);
+		this.verticalLine.setScaleX(0);
 		
 		this.createDragger(20);
 
-		this.getChildren().add(verticalLine);
-		this.getChildren().add(horizontalLine);
-		this.getChildren().add(borderLines);
-		this.getChildren().addAll(markers);
-		this.getChildren().add(dragger);
+		this.wrapper.getChildren().add(verticalLine);
+		this.wrapper.getChildren().add(horizontalLine);
+		this.wrapper.getChildren().add(borderLines);
+		this.wrapper.getChildren().addAll(markers);
+		this.wrapper.getChildren().add(dragger);
 
 		this.addEventHandling();
 		this.setAllowDrag(false);
-		this.setPickOnBounds(false);
+		this.wrapper.setPickOnBounds(false);
 	}
 	
+	public Node get(){
+		return wrapper;
+	}
+	
+	public void show(){
+		ScaleTransition[] scaleTransitions = new ScaleTransition[2];
+		
+		scaleTransitions[0] = new ScaleTransition(Duration.millis(4000),horizontalLine);
+		scaleTransitions[1] = new ScaleTransition(Duration.millis(4000),verticalLine);
+		
+		scaleTransitions[0].setFromY(0);
+		scaleTransitions[0].setFromX(0);
+		
+		scaleTransitions[1].setFromY(0);
+		scaleTransitions[1].setFromX(0);
+		
+		scaleTransitions[0].setToX(1);
+		scaleTransitions[0].setToY(1);
+		
+		scaleTransitions[1].setToX(1);
+		scaleTransitions[1].setToY(1);
+		
+		scaleTransitions[0].play();
+		scaleTransitions[1].play();
+	}
+
 	public boolean isAllowDrag() {
 		return allowDrag;
 	}
@@ -155,7 +191,7 @@ public class FXBaseIndicator extends Group {
 			
 			if(!allowDrag) return;
 			
-			Point2D point = this.sceneToLocal(e.getSceneX(), e.getSceneY());
+			Point2D point = this.wrapper.sceneToLocal(e.getSceneX(), e.getSceneY());
 
 			orgSceneX = point.getX();
 			orgSceneY = point.getY();
@@ -176,7 +212,7 @@ public class FXBaseIndicator extends Group {
 			
 			dragger.getScene().setCursor(Cursor.MOVE);
 			
-			Point2D point = this.sceneToLocal(e.getSceneX(), e.getSceneY());
+			Point2D point = this.wrapper.sceneToLocal(e.getSceneX(), e.getSceneY());
 
 			double offsetX = point.getX() - orgSceneX;
 			double offsetY = point.getY() - orgSceneY;
